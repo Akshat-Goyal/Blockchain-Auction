@@ -8,19 +8,22 @@ pragma solidity >=0.4.22 <0.9.0;
 contract AModernWay {
     /**
      * This is an enum which will help to keep the current status of an item.
-     * The status AVAIABLE signifies that the item is avaialable for sell
-     * The status IN_TRANSIT signifies that the item is in transit i.e. a buyer has paid for it and it waiting for seller to deliver
-     * The status SOLD signifies that the item has already been sold
+     * The status WAITING signifies that the item is not yet avaialable for auction
+     * The status STARTED signifies that the auction has started and bidders can start bidding
+     * The status PAY_AND_VERIFY signifies that the bidders can pay to verify their bid
+     * The status SOLD signifies that the item is sold to winner, and money is transferred to seller and bidders.
+     * The status DELIVERED signifies that the item is delivered to the winner
      */
     enum status {
-        WAIT,
-        START,
-        PAY,
-        SOLD
+        WAITING,
+        STARTED,
+        PAY_AND_VERIFY,
+        SOLD,
+        DELIVERED
     }
 
     struct Bid{
-        string hashedBid;
+        bytes32 hashedBid;
         uint256 bidValue;
         bool isVerified;
     }
@@ -65,181 +68,197 @@ contract AModernWay {
      */
     Item[] items;
 
-    /**
-     * This modifier is used by a function to check if the item with ID = itemID is accessed only by the seller of that item
-     * @param itemID is the unique ID of the item
-     */
-    modifier onlySeller(uint256 itemID) {
-        require(
-            msg.sender == items[itemID].sellerID,
-            "You do not own the item!"
-        );
-        _;
-    }
+    // /**
+    //  * This modifier is used by a function to check if the item with ID = itemID is accessed only by the seller of that item
+    //  * @param itemID is the unique ID of the item
+    //  */
+    // modifier onlySeller(uint256 itemID) {
+    //     require(
+    //         msg.sender == items[itemID].sellerID,
+    //         "You do not own the item!"
+    //     );
+    //     _;
+    // }
 
-    /**
-     * This modifier is used by a function to check if the item with ID = itemID is accessed only by the buyer of that item
-     * @param itemID is the unique ID of the item
-     */
-    modifier onlyBuyer(uint256 itemID) {
-        require(
-            msg.sender == items[itemID].buyerID,
-            "You do not own the item!"
-        );
-        _;
-    }
+    // /**
+    //  * This modifier is used by a function to check if the item with ID = itemID is accessed only by the buyer of that item
+    //  * @param itemID is the unique ID of the item
+    //  */
+    // modifier onlyBuyer(uint256 itemID) {
+    //     require(
+    //         msg.sender == items[itemID].buyerID,
+    //         "You do not own the item!"
+    //     );
+    //     _;
+    // }
 
-    /**
-     * This modifier is used by a function to check if the item with ID = itemID is in transit i.e. buyer has paid and is awaiting delivery from seller
-     * @param itemID is the unique ID of the item
-     */
-    modifier onlyInTransit(uint256 itemID) {
-        require(
-            items[itemID].itemStatus == status.IN_TRANSIT,
-            "Item not available for delivery!"
-        );
-        _;
-    }
+    // /**
+    //  * This modifier is used by a function to check if the item with ID = itemID is in transit i.e. buyer has paid and is awaiting delivery from seller
+    //  * @param itemID is the unique ID of the item
+    //  */
+    // modifier onlyInTransit(uint256 itemID) {
+    //     require(
+    //         items[itemID].itemStatus == status.IN_TRANSIT,
+    //         "Item not available for delivery!"
+    //     );
+    //     _;
+    // }
 
     /**
      * This function is used by a seller to add a new item to the listing.
      * @param itemName is the name of the item
      * @param itemDescription describes the item the seller wants to sell
-     * @param itemPrice is the price of the item with which the seller wants to sell it
      */
     function addNewItem(
         string memory itemName,
-        string memory itemDescription,
-        uint256 itemPrice
+        string memory itemDescription
     ) public {
         Item memory newItem;
         newItem.listingID = numOfItems++;
         newItem.name = itemName;
         newItem.description = itemDescription;
         newItem.sellerID = msg.sender;
-        newItem.itemStatus = status.WAIT;
+        newItem.itemStatus = status.WAITING;
         newItem.encryptedString = "Item not available yet, please wait for the seller to deliver it!";
         items.push(newItem);
     }
 
-
     /**
-     * This function is used by a seller to start an auction to an item..
-     * @param itemId is the name of the item
-     * @param auctionType describes the item the seller wants to sell
+     * This function is used by a seller to start an auction for the item.
+     * @param itemID is the id of the item
+     * @param auctionType describes the type of the auction
      */
     function startAuction(
-        string memory itemId, string memory auctionType
-
+        uint256 itemID, string memory auctionType
     ) public {
-         require(
-            items[itemId].itemStatus == status.WAIT,
-            "Item not available for sale!"
+        require(
+            itemID < numOfItems,
+            "Invalid item ID!"
         );
-           require(
-            msg.sender == items[itemId].sellerID,
-            "Item not available for sale!"
+        require(
+            items[itemID].itemStatus == status.WAITING,
+            "Item not available for auction!"
+        );
+        require(
+            msg.sender == items[itemID].sellerID,
+            "Only seller can start the auction!"
         );
         
         Auction memory auction;
         auction.auctionType = auctionType;
-        items[itemId].auction = auction;
-        items[itemId].itemStatus = status.START;
-        
+        items[itemID].auction = auction;
+        items[itemID].itemStatus = status.STARTED;
     }
 
     /**
-     * This function is used by a seller to start an auction to an item..
-     * @param itemId is the name of the item
+     * This function is called by the bidders to bid for an item.
+     * @param itemID is the id of the item
+     * @param hashedBid is the hashed value of the bid to keep the bid sealed
      */
-    function bidAuction(
-        string memory itemId, string memory hashedBid
+    function bidAtAuction(
+        uint256 itemID, bytes32 hashedBid
     ) public {
-         require(
-            items[itemId].itemStatus == status.START,
-            "Item not available for sale!"
+        require(
+            itemID < numOfItems,
+            "Invalid item ID!"
         );
         require(
-            msg.sender != items[itemId].sellerID,
+            items[itemID].itemStatus == status.STARTED,
+            "Item not available for bidding!"
+        );
+        require(
+            msg.sender != items[itemID].sellerID,
             "Seller can not buy their item!"
         );
         require(
-             items[itemId].auction.addressToBid[msg.sender].hashedBid == "",
-            "Can only bid once"
+            items[itemID].auction.addressToBid[msg.sender].hashedBid == keccak256(abi.encodePacked("")),
+            "Can only bid once!"
         );
+
         address buyerAddress = msg.sender;
-        items[itemId].itemStatus = status.VERIFY;
-        items[itemId].auction.addressToBid[buyerAddress].hashedBid = hashedBid;
-        items[itemId].auction.bidders.push(msg.sender);
+        items[itemID].auction.addressToBid[buyerAddress].hashedBid = hashedBid;
+        items[itemID].auction.bidders.push(msg.sender);
     }
 
 
     /**
-     * This function is used by a seller to start an auction to an item..
-     * @param itemId is the name of the item
+     * This function is used by a seller to stop the bidding.
+     * @param itemID is the id of the item
      */
     function stopBidding(
-        string memory itemId
+        uint256 itemID
     ) public {
-         require(
-            items[itemId].itemStatus == status.START,
-            "Item not available for sale!"
+        require(
+            itemID < numOfItems,
+            "Invalid item ID!"
         );
-           require(
-            msg.sender == items[itemId].sellerID,
-            "Item not available for sale!"
+        require(
+            items[itemID].itemStatus == status.STARTED,
+            "Invalid request. Item was not available for bidding!"
+        );
+        require(
+            msg.sender == items[itemID].sellerID,
+            "Only seller can stop the bidding!"
         );
         
-        items[itemId].itemStatus = status.PAY;
+        items[itemID].itemStatus = status.PAY_AND_VERIFY;
     }
 
 
-     /**
-     * This function is used by a seller to start an auction to an item..
-     * @param itemId is the name of the item
+    /**
+     * This function is used by the bidders to pay and verify their bidding.
+     * @param itemID is the id of the item
+     * @param publicKey is the public key of the bidder
      */
-    function payBid(
-        string memory itemId, string memory publicKey
+    function payAndVerifyBid(
+        uint256 itemID, string memory publicKey
     ) public payable {
-         require(
-            items[itemId].itemStatus == status.PAY,
+        require(
+            itemID < numOfItems,
+            "Invalid item ID!"
+        );
+        require(
+            items[itemID].itemStatus == status.PAY_AND_VERIFY,
             "todo"
         );
         require(
-             keccak256(abi.encodePacked(msg.value, msg.sender)) == items[itemId].auction.addressToBid[msg.sender].hashedBid,
-            "Wrong Hash"
+            keccak256(abi.encodePacked(msg.value, msg.sender)) == items[itemID].auction.addressToBid[msg.sender].hashedBid,
+            "Wrong Hash!"
         );
         require(
-            items[itemId].auction.addressToBid[msg.sender].isVerified == false,
+            items[itemID].auction.addressToBid[msg.sender].isVerified == false,
             "Already verified"
         );
         
         address buyerAddress = msg.sender;
-        items[itemId].itemStatus = status.VERIFY;
-        items[itemId].auction.addrssToBid[buyerAddress].bidValue = msg.value;
-        items[itemId].auction.addrssToBid[buyerAddress].isVerified = true;
+        items[itemID].auction.addressToBid[buyerAddress].bidValue = msg.value;
+        items[itemID].auction.addressToBid[buyerAddress].isVerified = true;
         addressToPublicKey[buyerAddress] = publicKey;
     }
 
-        /**
-     * This function is used by a seller to start an auction to an item..
-     * @param itemId is the name of the item
+    /**
+     * This function is used to find the winner of the auction, and transfer the money to seller and bidders.
+     * @param itemID is the id of the item
      */
     function declareWinner(
-        string memory itemId
+        uint256 itemID
     ) private {
-         require(
-            items[itemId].itemStatus == status.SOLD,
-            "Item not available for sale!"
+        require(
+            itemID < numOfItems,
+            "Invalid item ID!"
+        );
+        require(
+            items[itemID].itemStatus == status.SOLD,
+            "todo"
         );
        
-        address payable[] memory bidders = items[itemId].auction.bidders;
-        address winner=items[itemId].sellerID;
+        address payable[] memory bidders = items[itemID].auction.bidders;
+        address winner = items[itemID].sellerID;
         uint256 maxBidValue = 0;
         for (uint256 i = 0; i < bidders.length; i++) 
         {
-            Bid memory bid = items[itemId].auction.addressToBid[bidders[i]];
-            if(bid.isVerified == true && bid.bidValue>=maxBidValue) 
+            Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
+            if(bid.isVerified == true && bid.bidValue >= maxBidValue) 
             {
                 winner = bidders[i];
                 maxBidValue = bid.bidValue;
@@ -247,33 +266,38 @@ contract AModernWay {
         }
         for (uint256 i = 0; i < bidders.length; i++) 
         {
-            Bid memory bid = items[itemId].auction.addressToBid[bidders[i]];
+            Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
             if(bid.isVerified == true &&  bidders[i] != winner) 
             {
                 bidders[i].transfer(bid.bidValue);
             }
         }
-        items[itemId].sellerID.transfer(maxBidValue);
-        items[itemId].winnerID = winner;
+        items[itemID].sellerID.transfer(maxBidValue);
+        items[itemID].winnerID = winner;
     }
     
     /**
-     * This function is used by a seller to start an auction to an item..
-     * @param itemId is the name of the item
+     * This function is used by a seller to stop the auction and declare the winner.
+     * @param itemID is the id of the item
      */
     function stopAuction(
-        string memory itemId
+        uint256 itemID
     ) public {
-         require(
-            items[itemId].itemStatus == status.PAY,
-            "Item not available for sale!"
+        require(
+            itemID < numOfItems,
+            "Invalid item ID!"
         );
-           require(
-            msg.sender == items[itemId].sellerID,
+        require(
+            items[itemID].itemStatus == status.PAY_AND_VERIFY,
             "todo"
         );
-        items[itemId].itemStatus = status.SOLD;
-        declareWinner(itemId);
+        require(
+            msg.sender == items[itemID].sellerID,
+            "Only seller can stop the auction!"
+        );
+
+        items[itemID].itemStatus = status.SOLD;
+        declareWinner(itemID);
     }
 
     // /**
@@ -295,14 +319,14 @@ contract AModernWay {
     //     address buyerAddress = msg.sender;
     //     items[itemID].itemStatus = status.IN_TRANSIT;
     //     items[itemID].buyerID = buyerAddress;
-       //  addressToPublicKey[buyerAddress] = publicKey;
+    //     addressToPublicKey[buyerAddress] = publicKey;
        
     // }
 
     /**
-     * This function is used by a seller to get public Key of the buyer .
-     * @param itemID is the unique ID for each item
-     *  @return Public Key of the buyer who bought item with ID = itemID
+     * This function is used to get the public Key of the winner.
+     * @param itemID is the unique ID of the item
+     * @return Public Key of the buyer who bought item with ID = itemID
      */
     function getWinnerPublicKey(uint256 itemID)
         public
@@ -310,57 +334,64 @@ contract AModernWay {
         returns (string memory)
     {
         require(
-            items[itemID].itemStatus == status.SOLD,
-            "Item not available for sale!"
+            itemID < numOfItems,
+            "Invalid item ID!"
         );
-           require(
-            msg.sender == items[itemID].sellerID,
+        require(
+            items[itemID].itemStatus == status.SOLD,
             "todo"
         );
         return addressToPublicKey[items[itemID].winnerID];
     }
 
     /**
-     * This function is used by a seller to transfer encrypted string to the buyer and also recieve the payment.
-     * @param itemID is the unique ID for each item
+     * This function is used by a seller to transfer encrypted string to the buyer.
+     * @param itemID is the unique ID of the item
      * @param encryptedItem is the encrypted Secret key sent by the seller using buyers Public Key
+     * @param publicKey is the public key of the seller
      */
-    function deliverItem(uint256 itemID, string memory encryptedItem)
+    function deliverItem(uint256 itemID, string memory encryptedItem, string memory publicKey)
         public
-        onlySeller(itemID)
-        onlyInTransit(itemID)
     {
         require(
+            itemID < numOfItems,
+            "Invalid item ID!"
+        );
+        require(
             items[itemID].itemStatus == status.SOLD,
-            "Item not available for sale!"
+            "todo"
         );
         require(
             msg.sender == items[itemID].sellerID,
-            "todo"
+            "Only seller can deliver the item!"
         );
-        address payable sellerAddress = items[itemID].sellerID;
+
+        addressToPublicKey[msg.sender] = publicKey;
         items[itemID].encryptedString = encryptedItem;
-        // sellerAddress.transfer(items[itemID].price);
+        items[itemID].itemStatus = status.DELIVERED;
     }
 
     /**
-     * This function is used by a buyer to get the encrypted Secret string after completing the purchase.
-     * @param itemID is the unique ID for each item
+     * This function is used by the winner of the auction to get the encrypted Secret string.
+     * @param itemID is the unique ID of the item
      * @return encryptedString provided by the seller which can be decrypted by the buyer using their Private Key
      */
     function getItem(uint256 itemID)
         public
         view
-        // onlyBuyer(itemID)
         returns (string memory)
     {
         require(
-            items[itemID].itemStatus == status.SOLD,
+            itemID < numOfItems,
+            "Invalid item ID!"
+        );
+        require(
+            items[itemID].itemStatus == status.DELIVERED,
             "Item not available yet, please wait for the seller to deliver it!"
         );
-         require(
+        require(
             msg.sender == items[itemID].winnerID,
-            "todo"
+            "Only winner can get the item!"
         );
 
         return items[itemID].encryptedString;
@@ -400,13 +431,13 @@ contract AModernWay {
 
     /**
      * This function is used by a buyer to view the listing.
-     * @return a string containing list of all available Items
+     * @return a string containing list of all available Items for bidding
      */
-    function viewItems() public view returns (string memory) {
+    function viewItemsForBidding() public view returns (string memory) {
         string memory itemList = "";
 
         for (uint256 i = 0; i < items.length; i++) {
-            if (items[i].itemStatus == status.AVAILABLE) {
+            if (items[i].itemStatus == status.STARTED) {
                 itemList = string(abi.encodePacked(itemList, "ID: "));
                 itemList = string(
                     abi.encodePacked(itemList, uint2str(items[i].listingID))
@@ -418,10 +449,6 @@ contract AModernWay {
                 );
                 itemList = string(
                     abi.encodePacked(itemList, items[i].description)
-                );
-                itemList = string(abi.encodePacked(itemList, "; Price: "));
-                itemList = string(
-                    abi.encodePacked(itemList, uint2str(items[i].price))
                 );
                 itemList = string(abi.encodePacked(itemList, "\n"));
             }
