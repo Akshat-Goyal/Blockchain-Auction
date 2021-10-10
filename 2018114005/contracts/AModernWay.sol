@@ -3,7 +3,7 @@ pragma solidity >=0.4.22 <0.9.0;
 
 /**
  * @title A Modern Way
- * @dev Smart contract to facilitate buying and selling of items (Netflix Screens) securely
+ * @dev Smart contract to facilitate auctions securely
  */
 contract AModernWay {
     /**
@@ -11,7 +11,8 @@ contract AModernWay {
      * The status WAITING signifies that the item is not yet avaialable for auction
      * The status STARTED signifies that the auction has started and bidders can start bidding
      * The status PAY_AND_VERIFY signifies that the bidders can pay to verify their bid
-     * The status SOLD signifies that the item is sold to winner, and money is transferred to seller and bidders.
+     * The status SOLD signifies that the item is sold to the winner, and money is transferred 
+     * and refunded to the seller and bidders respectively.
      * The status DELIVERED signifies that the item is delivered to the winner
      */
     enum status {
@@ -39,7 +40,7 @@ contract AModernWay {
      * This is our main item struct.
      * listingID is the the unique ID for each item
      * sellerID is the address of the seller who wants to sell the item
-     * buyerID is the address of the buyer who paid for the item
+     * winnerID is the address of the buyer who wins the auction
      * itemStatus tells the current status of the item. It uses the enum status defined above
      */
     struct Item {
@@ -124,7 +125,7 @@ contract AModernWay {
     }
 
     /**
-     * This function is used by a seller to start an auction for the item.
+     * This function is used by a seller to start the auction for the item.
      * @param itemID is the id of the item
      * @param auctionType describes the type of the auction
      */
@@ -151,7 +152,7 @@ contract AModernWay {
     }
 
     /**
-     * This function is called by the bidders to bid for an item.
+     * This function is called by the bidders to bid on the item.
      * @param itemID is the id of the item
      * @param hashedBid is the hashed value of the bid to keep the bid sealed
      */
@@ -194,7 +195,7 @@ contract AModernWay {
         );
         require(
             items[itemID].itemStatus == status.STARTED,
-            "Invalid request. Item was not available for bidding!"
+            "Invalid request, item was not available for bidding!"
         );
         require(
             msg.sender == items[itemID].sellerID,
@@ -219,7 +220,7 @@ contract AModernWay {
         );
         require(
             items[itemID].itemStatus == status.PAY_AND_VERIFY,
-            "todo"
+            "Invalid request, item not available for pay and verify!"
         );
         require(
             keccak256(abi.encodePacked(msg.value, msg.sender)) == items[itemID].auction.addressToBid[msg.sender].hashedBid,
@@ -227,7 +228,7 @@ contract AModernWay {
         );
         require(
             items[itemID].auction.addressToBid[msg.sender].isVerified == false,
-            "Already verified"
+            "Already verified!"
         );
         
         address buyerAddress = msg.sender;
@@ -240,7 +241,7 @@ contract AModernWay {
      * This function is used to find the winner of the auction, and transfer the money to seller and bidders.
      * @param itemID is the id of the item
      */
-    function declareWinner(
+    function declareWinnerAndTransferMoney(
         uint256 itemID
     ) private {
         require(
@@ -249,7 +250,7 @@ contract AModernWay {
         );
         require(
             items[itemID].itemStatus == status.SOLD,
-            "todo"
+            "Auction not stopped or winner already declared!"
         );
        
         address payable[] memory bidders = items[itemID].auction.bidders;
@@ -267,7 +268,7 @@ contract AModernWay {
         for (uint256 i = 0; i < bidders.length; i++) 
         {
             Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
-            if(bid.isVerified == true &&  bidders[i] != winner) 
+            if(bid.isVerified == true && bidders[i] != winner) 
             {
                 bidders[i].transfer(bid.bidValue);
             }
@@ -289,7 +290,7 @@ contract AModernWay {
         );
         require(
             items[itemID].itemStatus == status.PAY_AND_VERIFY,
-            "todo"
+            "Invalid request, item's not at PAY_AND_VERIFY!"
         );
         require(
             msg.sender == items[itemID].sellerID,
@@ -297,7 +298,7 @@ contract AModernWay {
         );
 
         items[itemID].itemStatus = status.SOLD;
-        declareWinner(itemID);
+        declareWinnerAndTransferMoney(itemID);
     }
 
     // /**
@@ -338,8 +339,8 @@ contract AModernWay {
             "Invalid item ID!"
         );
         require(
-            items[itemID].itemStatus == status.SOLD,
-            "todo"
+            items[itemID].itemStatus == status.SOLD || items[itemID].itemStatus == status.DELIVERED,
+            "Winner is not declared yet!"
         );
         return addressToPublicKey[items[itemID].winnerID];
     }
@@ -359,7 +360,7 @@ contract AModernWay {
         );
         require(
             items[itemID].itemStatus == status.SOLD,
-            "todo"
+            "Item not sold or already delivered!"
         );
         require(
             msg.sender == items[itemID].sellerID,
@@ -369,6 +370,27 @@ contract AModernWay {
         addressToPublicKey[msg.sender] = publicKey;
         items[itemID].encryptedString = encryptedItem;
         items[itemID].itemStatus = status.DELIVERED;
+    }
+
+    /**
+     * This function is used to get the public Key of the seller.
+     * @param itemID is the unique ID of the item
+     * @return Public Key of the buyer who bought item with ID = itemID
+     */
+    function getSellerPublicKey(uint256 itemID)
+        public
+        view
+        returns (string memory)
+    {
+        require(
+            itemID < numOfItems,
+            "Invalid item ID!"
+        );
+        require(
+            items[itemID].itemStatus == status.DELIVERED,
+            "Item not delivered yet, public key will be available once item is delivered!"
+        );
+        return addressToPublicKey[items[itemID].sellerID];
     }
 
     /**
