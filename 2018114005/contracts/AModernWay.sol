@@ -112,16 +112,21 @@ contract AModernWay {
      */
     function addNewItem(
         string memory itemName,
-        string memory itemDescription
+        string memory itemDescription,
+        string memory auctionType
     ) public {
         Item memory newItem;
         newItem.listingID = numOfItems++;
         newItem.name = itemName;
         newItem.description = itemDescription;
         newItem.sellerID = msg.sender;
-        newItem.itemStatus = status.WAITING;
+        // newItem.itemStatus = status.WAITING;
         newItem.encryptedString = "Item not available yet, please wait for the seller to deliver it!";
         items.push(newItem);
+        Auction memory auction;
+        auction.auctionType = auctionType;
+        items[newItem.listingID].auction = auction;
+        items[newItem.listingID].itemStatus = status.STARTED;
     }
 
     /**
@@ -167,14 +172,14 @@ contract AModernWay {
             items[itemID].itemStatus == status.STARTED,
             "Item not available for bidding!"
         );
-        require(
-            msg.sender != items[itemID].sellerID,
-            "Seller can not buy their item!"
-        );
-        require(
-            items[itemID].auction.addressToBid[msg.sender].hashedBid == keccak256(abi.encodePacked("")),
-            "Can only bid once!"
-        );
+        // require(
+        //     msg.sender == items[itemID].sellerID,
+        //     "Seller can not buy their item!"
+        // );
+        // require(
+        //     items[itemID].auction.addressToBid[msg.sender].hashedBid != keccak256(abi.encodePacked("")),
+        //     "Can only bid once!"
+        // );
 
         address buyerAddress = msg.sender;
         items[itemID].auction.addressToBid[buyerAddress].hashedBid = hashedBid;
@@ -451,6 +456,24 @@ contract AModernWay {
         return string(bstr);
     }
 
+    function toAsciiString(address x) internal view returns (string memory) {
+    bytes memory s = new bytes(40);
+    for (uint i = 0; i < 20; i++) {
+        bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
+        bytes1 hi = bytes1(uint8(b) / 16);
+        bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
+        s[2*i] = char(hi);
+        s[2*i+1] = char(lo);            
+    }
+    return string(s);
+}
+
+function char(bytes1 b) internal view returns (bytes1 c) {
+    if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
+    else return bytes1(uint8(b) + 0x57);
+}
+
+
     /**
      * This function is used by a buyer to view the listing.
      * @return a string containing list of all available Items for bidding
@@ -459,7 +482,7 @@ contract AModernWay {
         string memory itemList = "";
 
         for (uint256 i = 0; i < items.length; i++) {
-            if (items[i].itemStatus == status.STARTED) {
+            // if (items[i].itemStatus == status.STARTED) {
                 itemList = string(abi.encodePacked(itemList, "ID: "));
                 itemList = string(
                     abi.encodePacked(itemList, uint2str(items[i].listingID))
@@ -472,10 +495,21 @@ contract AModernWay {
                 itemList = string(
                     abi.encodePacked(itemList, items[i].description)
                 );
+                itemList = string(
+                    abi.encodePacked(itemList, "; SellerID: ")
+                );
+                itemList = string(
+                    abi.encodePacked(itemList, toAsciiString(items[i].sellerID))
+                );
+                itemList = string(
+                    abi.encodePacked(itemList, "; Status: ")
+                );
+                itemList = string(
+                    abi.encodePacked(itemList, items[i].itemStatus)
+                );
                 itemList = string(abi.encodePacked(itemList, "\n"));
-            }
+            // }
         }
-
         return itemList;
     }
 }
