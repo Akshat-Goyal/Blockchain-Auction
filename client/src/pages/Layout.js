@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import { Layout } from "antd";
-
+import { makeStyles } from '@material-ui/core/styles';
 import Navbar from "../components/Navbar";
 import Marketplace from "./Marketplace";
 import Portal from "./Portal";
@@ -16,14 +16,13 @@ const Routes = (props) => {
       <Layout>
         <Navbar />
         <Content
-          className="site-layout"
           style={{
             padding: "50px 50px",
             marginTop: 64,
             minHeight: "80vh",
             display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "center",
+            alignItems: "center",
+            justifyContent: "flex-start",
             flexDirection: "column",
           }}
         >

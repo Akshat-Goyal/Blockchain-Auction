@@ -10,7 +10,6 @@ import ModernWay from "./contracts/AModernWay.json";
 import Layout from "./pages/Layout";
 import * as loader from "./assets/loader.json";
 
-import "antd/dist/antd.dark.css";
 import "./App.css";
 
 export const BlockchainContext = createContext();
@@ -35,12 +34,12 @@ const App = (props) => {
         // Get the contract instance.
         const networkId = await web3.eth.net.getId();
         console.log(networkId);
-        const deployedNetwork = AuctionContract.networks[networkId];                                                                                                                                                                                                                                        
-       
+        const deployedNetwork = AuctionContract.networks[networkId];
+
         const contractUndeployed = trufflecontract(ModernWay);
         contractUndeployed.setProvider(web3.currentProvider);
         const contract = await contractUndeployed.deployed();
-       
+
         let userAccount = await web3.eth.getCoinbase();
 
         // Set web3, accounts, and contract to the state, and then proceed with an

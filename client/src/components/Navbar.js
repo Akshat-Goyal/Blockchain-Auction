@@ -32,7 +32,7 @@ const { Header } = Layout;
 const parseBalance = (num, decimal) =>
   Math.round(10 ** decimal * (num / 10 ** 18)) / 10 ** decimal;
 
-  const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(theme => ({
   "@global": {
     ul: {
       margin: 0,
