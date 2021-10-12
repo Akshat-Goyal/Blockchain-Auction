@@ -63607,7 +63607,7 @@
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-10-12T17:44:26.584Z",
+  "updatedAt": "2021-10-12T17:46:59.392Z",
   "devdoc": {
     "details": "Smart contract to facilitate buying, selling, auction of items securely",
     "methods": {
