@@ -1,20 +1,88 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Card, Avatar, Row, Col, Tag, Modal, InputNumber, message } from "antd";
-
+import { Avatar, Row, Col, Tag, Modal, InputNumber, message } from "antd";
+import { makeStyles } from '@material-ui/core/styles';
+import { styled } from '@material-ui/core/styles';
+import { red, green, purple } from '@material-ui/core/colors';
+// import Avatar from "@material-ui/core/Avatar";
+import Button from "@material-ui/core/Button";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import TextField from "@material-ui/core/TextField";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Checkbox from "@material-ui/core/Checkbox";
+import Link from "@material-ui/core/Link";
+import Grid from "@material-ui/core/Grid";
+import Card from "@material-ui/core/Card";
+import CardContent from "@material-ui/core/CardContent";
+import CardActions from "@material-ui/core/CardActions";
+import Box from "@material-ui/core/Box";
+// import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
+import Typography from "@material-ui/core/Typography";
+import Container from "@material-ui/core/Container";
+import Select from "@material-ui/core/Select";
+import MenuItem from "@material-ui/core/MenuItem";
+import { withStyles } from "@material-ui/core/styles";
+import AppBar from "@material-ui/core/AppBar";
+import Toolbar from "@material-ui/core/Toolbar";
+import IconButton from "@material-ui/core/IconButton";
+// import ArrowBackIos from "@material-ui/icons/ArrowBackIos";
+import Radio from "@material-ui/core/Radio";
+import RadioGroup from "@material-ui/core/RadioGroup";
+import FormHelperText from "@material-ui/core/FormHelperText";
+import FormControl from "@material-ui/core/FormControl";
+import FormLabel from "@material-ui/core/FormLabel";
+import InputLabel from "@material-ui/core/InputLabel";
 import { sampleImages } from "../components/SampleImages";
 import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 import { BlockchainContext } from "../App";
 
 const { Meta } = Card;
 
+const ColorButton3 = styled(Button)(({ theme }) => ({
+  color: theme.palette.getContrastText(purple[500]),
+  backgroundColor: purple[500],
+  '&:hover': {
+    backgroundColor: purple[700],
+  },
+}));
+
 const ItemCard = ({ item, setModal, getEncryptedString, encryptedString }) => {
 
   console.log(Object.keys(localStorage));
   console.log(localStorage.getItem(item.ID));
-  
+
    return (
     <Col>
-      <Card
+        			<Card
+				sx={{ maxWidth: 345 }}>
+				<CardContent>
+					<Typography gutterBottom variant="h4" component="div">
+					{item.Name}
+					</Typography>
+					<Typography variant="body2" color="text.secondary">
+					Description: {item.Description}
+					</Typography>
+					<Typography variant="body2" color="text.secondary">
+					Price: {item.Price}
+					</Typography>
+            </CardContent>
+            <CardActions>
+          {(item.Status == '\u0004')?
+          (
+            <Typography variant="body2" color="text.secondary">
+            Secret String: {item.SecretString}
+            </Typography>
+
+          ):
+          (
+            <Typography variant="body2" color="text.secondary">
+            <ColorButton3 variant="outlined">Waiting for Delivery</ColorButton3>
+            </Typography>
+          )}
+				</CardActions>
+			</Card>
+			<br />
+			<br />
+      {/* <Card
         style={{ width: 300, margin: "20px 0" }}
         cover={<img style={{ width: "100%" }} src={sampleImages[0]} />}
         actions={[
@@ -46,7 +114,7 @@ const ItemCard = ({ item, setModal, getEncryptedString, encryptedString }) => {
             />
           )
         }
-        
+
         <Tag
           style={{
             marginTop: "20px",
@@ -54,7 +122,7 @@ const ItemCard = ({ item, setModal, getEncryptedString, encryptedString }) => {
           color="green"
         >
         </Tag>
-      </Card>
+      </Card> */}
     </Col>
   );
 };
@@ -92,7 +160,7 @@ const Cart = (props) => {
   useEffect(() => {
     contract.viewAllItems().then((stringOfItems) => {
       parseItem(stringOfItems);
-     
+
     });
 
   }, []);
@@ -102,17 +170,17 @@ const Cart = (props) => {
 
   // const getEncryptedString = (ID) => {
   //   return new Promise(function(resolve, reject) {
-    
+
   //   contract.getItem(ID, { from: userAccount }).then((secretString) => {
   //     const oldencryptedString = encryptedString;
   //     oldencryptedString[ID] = secretString;
   //     setEncryptedString(oldencryptedString);
   //     resolve('start of new Promise');
   //   });
-   
+
   // });
   // }
- 
+
   // console.log(x);
   return items.length == 0 ? (
     "No items found"

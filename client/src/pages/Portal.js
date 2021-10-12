@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Card, Avatar, Row, Col, Tag, Modal, InputNumber, message } from "antd";
+import { Avatar, Row, Col, Tag, Modal, InputNumber, message } from "antd";
 import { makeStyles } from '@material-ui/core/styles';
+import { styled } from '@material-ui/core/styles';
+import { red, green } from '@material-ui/core/colors';
 // import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import CssBaseline from "@material-ui/core/CssBaseline";
@@ -9,6 +11,9 @@ import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import Link from "@material-ui/core/Link";
 import Grid from "@material-ui/core/Grid";
+import Card from "@material-ui/core/Card";
+import CardContent from "@material-ui/core/CardContent";
+import CardActions from "@material-ui/core/CardActions";
 import Box from "@material-ui/core/Box";
 // import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
 import Typography from "@material-ui/core/Typography";
@@ -32,6 +37,22 @@ import { BlockchainContext } from "../App";
 // const EthCrypto = require('eth-crypto');
 
 const { Meta } = Card;
+
+const ColorButton = styled(Button)(({ theme }) => ({
+  color: theme.palette.getContrastText(red[700]),
+  backgroundColor: red[700],
+  '&:hover': {
+    backgroundColor: red[900],
+  },
+}));
+
+const ColorButton2 = styled(Button)(({ theme }) => ({
+  color: theme.palette.getContrastText(green[500]),
+  backgroundColor: green[500],
+  '&:hover': {
+    backgroundColor: green[700],
+  },
+}));
 
 
 const useStyles = makeStyles(theme => ({
@@ -88,72 +109,81 @@ const ItemCard = ({ item, setModal, stopBidding, stopAuction, deliverItem, secre
 		var oldSecret = secret;
 		oldSecret[item.ID] = val;
 		setSecret(oldSecret);
+		console.log(secret[item.ID]);
 	}
 	return (
 		<Col>
 			<Card
-				style={{ width: 300, margin: "20px 0" }}
-				cover={<img style={{ width: "100%" }} src={sampleImages[0]} />}
-				actions={[
-					item.Status == '\u0000' ? (
-						<div onClick={() => stopBidding(item)}>
-							Stop Bidding
-						</div>
-					) : (
+				sx={{ maxWidth: 345 }}>
+				<CardContent>
+					<Typography gutterBottom variant="h5" component="div">
+					{item.Name}
+					</Typography>
+					<Typography variant="body2" color="text.secondary">
+					{item.Description}
+					</Typography>
+					// TODO: add if condition to show this only when fixed price
+					<Typography variant="body2" color="text.secondary">
+					{item.Price}
+					</Typography>
+				</CardContent>
+				<CardActions>
+
+						{item.Status == '\u0000'  ? (
+							<Typography onClick={() => stopBidding(item) }>
+								{/* <Button variant="outlined" color="error" size="small">Stop Bidding</Button> */}
+								<ColorButton variant="outlined" size="small">Stop Bidding</ColorButton>
+							</Typography>
+						) : (
 
 						item.Status == '\u0001' ? (
+							<Typography>
+								<ColorButton variant="outlined" size="small">No Buyers Yet</ColorButton>
+							</Typography>
+						) : (
+
+						item.Status == '\u0002'  ? (
+						<Typography onClick={() => stopAuction(item)}>
+							{/* <Button variant="contained" color="error" size="small">Stop Auction</Button> */}
+							<ColorButton variant="contained" size="small">Stop Auction</ColorButton>
+						</Typography>
+						) : (
+
+						item.Status == '\u0003' ? (
+
 							<div>
-								Unsold
-							</div>
-						) :
-							(
-								item.Status == '\u0002' ? (
-									<div onClick={() => stopAuction(item)}>
-										Stop Auction
-									</div>
-								) : (
-									item.Status == '\u0003' ? (
-										<div>
-											<input
-												placeholder="Enter your Secret String"
-												style={{ width: "100%" }}
-												value={secret[item.ID]}
-												onChange={(value) => handleSecretChange(value.target.value)}
-											/>
-											<div onClick={() => deliverItem(item)}>
-												Deliver
-											</div>
-										</div>
-									) : (
-										<div>
-											Delivered
-										</div>
+								<br/>
+								<FormLabel component="legend">
+								<b>Enter your Secret String</b>
+								<br />
+								</FormLabel>
+								<TextField
+									variant="standard"
+									required
+									onChange={(value) => handleSecretChange(value.target.value)}
+									value={secret[item.ID]}
+								// value={inputs.AuctionType || ""}
+								/>
+								<br/>
+								<br/>
+								<div onClick={() => deliverItem(item)}>
+									<ColorButton2 variant="contained" size="small">Deliver</ColorButton2>
+								</div>
 
-									)
-								)
-							)
-					)
-				]}
-			>
-				<Meta
-					title={"Name : " + item.Name}
-				/>
-				<Meta
-					title={"Description : " + item.Description}
-				/>
+								</div>
+						) : (
 
-				<Meta
-					title={"Price : " + item.Price}
-				/>
-				<Tag
-					style={{
-						marginTop: "20px",
-					}}
-					color="green"
-				>
-					First Price Auction
-				</Tag>
+						<Typography>
+						{/* <Button variant="outlined" color="success">Delivered</Button> */}
+						<ColorButton2 variant="outlined" size="small">Delivered</ColorButton2>
+						</Typography>
+
+						)
+						)))}
+				</CardActions>
 			</Card>
+			<br />
+			<br />
 		</Col>
 	);
 };
@@ -288,7 +318,7 @@ const Portal = (props) => {
 								value={inputs.ItemDescription || ""}
 							/>
 						</Grid>
-						{/* 
+						{/*
 						<Grid item xs={12}>
 							<br />
 							<FormLabel component="legend">
@@ -323,13 +353,20 @@ const Portal = (props) => {
 								onChange={handleChange}
 								label="Item Type"
 							>
-								<MenuItem value="FixedPrice">FixedPrice</MenuItem>
+								<MenuItem value="FixedPrice">Fixed Price</MenuItem>
 								<MenuItem value="Type-1">Type 1</MenuItem>
 								<MenuItem value="Type-2">Type 2</MenuItem>
 								<MenuItem value="Type-3">Type 3</MenuItem>
 							</Select>
 
 							{inputs.AuctionType == 'FixedPrice' ? (
+
+								<div>
+								<br/>
+								<FormLabel component="legend">
+								<b>Enter Price</b>
+								<br />
+								</FormLabel>
 								<TextField
 									variant="outlined"
 									required
@@ -339,6 +376,8 @@ const Portal = (props) => {
 									value={inputs.ItemRate || ""}
 								// value={inputs.AuctionType || ""}
 								/>
+
+								</div>
 							) : (
 								<div />
 							)}

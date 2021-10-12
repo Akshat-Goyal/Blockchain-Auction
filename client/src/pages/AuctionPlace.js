@@ -1,6 +1,36 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Card, Avatar, Row, Col, Tag, Modal, InputNumber, message } from "antd";
-
+import { Avatar, Row, Col, Tag, Modal, InputNumber, message } from "antd";
+import { makeStyles } from '@material-ui/core/styles';
+import { styled } from '@material-ui/core/styles';
+import { red, green, purple } from '@material-ui/core/colors';
+// import Avatar from "@material-ui/core/Avatar";
+import Button from "@material-ui/core/Button";
+import CssBaseline from "@material-ui/core/CssBaseline";
+import TextField from "@material-ui/core/TextField";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Checkbox from "@material-ui/core/Checkbox";
+import Link from "@material-ui/core/Link";
+import Grid from "@material-ui/core/Grid";
+import Card from "@material-ui/core/Card";
+import CardContent from "@material-ui/core/CardContent";
+import CardActions from "@material-ui/core/CardActions";
+import Box from "@material-ui/core/Box";
+// import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
+import Typography from "@material-ui/core/Typography";
+import Container from "@material-ui/core/Container";
+import Select from "@material-ui/core/Select";
+import MenuItem from "@material-ui/core/MenuItem";
+import { withStyles } from "@material-ui/core/styles";
+import AppBar from "@material-ui/core/AppBar";
+import Toolbar from "@material-ui/core/Toolbar";
+import IconButton from "@material-ui/core/IconButton";
+// import ArrowBackIos from "@material-ui/icons/ArrowBackIos";
+import Radio from "@material-ui/core/Radio";
+import RadioGroup from "@material-ui/core/RadioGroup";
+import FormHelperText from "@material-ui/core/FormHelperText";
+import FormControl from "@material-ui/core/FormControl";
+import FormLabel from "@material-ui/core/FormLabel";
+import InputLabel from "@material-ui/core/InputLabel";
 import { sampleImages } from "../components/SampleImages";
 import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 import { BlockchainContext } from "../App";
@@ -8,11 +38,35 @@ import { BlockchainContext } from "../App";
 
 const { Meta } = Card;
 
+const ColorButton = styled(Button)(({ theme }) => ({
+  color: theme.palette.getContrastText(red[700]),
+  backgroundColor: red[700],
+  '&:hover': {
+    backgroundColor: red[900],
+  },
+}));
+
+const ColorButton2 = styled(Button)(({ theme }) => ({
+  color: theme.palette.getContrastText(green[500]),
+  backgroundColor: green[500],
+  '&:hover': {
+    backgroundColor: green[700],
+  },
+}));
+
+const ColorButton3 = styled(Button)(({ theme }) => ({
+  color: theme.palette.getContrastText(purple[500]),
+  backgroundColor: purple[500],
+  '&:hover': {
+    backgroundColor: purple[700],
+  },
+}));
+
 const ItemCard = ({ item, setModal, payBid, bid, setBid, placebid}) => {
 
   console.log(Object.keys(localStorage));
   console.log(localStorage.getItem(item.ID));
-  // localStorage.clear();   
+  // localStorage.clear();
   // const [bid, setBid] = useState(0);
   const handleBidChange = (val) =>
   {
@@ -22,56 +76,58 @@ const ItemCard = ({ item, setModal, payBid, bid, setBid, placebid}) => {
   }
   return (
     <Col>
-      <Card
-        style={{ width: 300, margin: "20px 0" }}
-        cover={<img style={{ width: "100%" }} src={sampleImages[0]} />}
-        actions={[
-          item.Status == '\u0000' && localStorage.getItem(item.ID) === null ? (
-            <div>
+    	<Card
+				sx={{ maxWidth: 345 }}>
+				<CardContent>
+					<Typography gutterBottom variant="h4" component="div">
+					{item.Name}
+					</Typography>
+					<Typography variant="body2" color="text.secondary">
+					Description: {item.Description}
+					</Typography>
+					{/* <Typography variant="body2" color="text.secondary">
+					Price: {item.Price}
+					</Typography> */}
+				</CardContent>
+				<CardActions>
 
-                <input
-                  placeholder="Enter your bid amount"
-                  style={{ width: "100%" }}
-                  value={bid[item.ID]}
-                  onChange={(value) => handleBidChange(value.target.value)}
-                />
-              <div onClick={() => placebid(item.ID)}>
-                Place Bid
-              </div>
-            </div>
-          ) : (
-            item.Status == '\u0000' && localStorage.getItem(item.ID) !== null ? (
+						{item.Status == '\u0000' && localStorage.getItem(item.ID) === null ?  (
               <div>
-                Bid Placed - {localStorage.getItem(item.ID)}
+                <FormLabel component="legend">
+								<b>Enter your Bid Amount</b>
+								<br />
+								</FormLabel>
+								<TextField
+									variant="standard"
+									required
+									onChange={(value) => handleBidChange(value.target.value)}
+									value={bid[item.ID]}
+								/>
+								<br/>
+								<br/>
+								<div onClick={() => placebid(item.ID)}>
+									<ColorButton2 variant="contained" size="small">Place Bid</ColorButton2>
+								</div>
+
               </div>
+						) : (
+            item.Status == '\u0000' && localStorage.getItem(item.ID) !== null ? (
+              <ColorButton3 variant="contained" size="small"> Bid Placed: {localStorage.getItem(item.ID)}</ColorButton3>
             ) : (
               item.Status == '\u0002' && localStorage.getItem(item.ID) !== null ? (
                 <div onClick={() => payBid(item.ID)}>
-                  Pay Bid - {localStorage.getItem(item.ID)}
+                  <ColorButton variant="contained" size="small"> Pay Bid: {localStorage.getItem(item.ID)}</ColorButton>
                 </div>
               ) : (
                 <div>
-                  Paid
-
+                  <ColorButton2 variant="contained" size="small"> Paid </ColorButton2>
                 </div>
               )
             )
-          ),
-        ]}
-      >
-        <Meta
-          title={item.Name}
-          description={item.Description}
-        />
-        <Tag
-          style={{
-            marginTop: "20px",
-          }}
-          color="green"
-        >
-          First Price Auction
-        </Tag>
-      </Card>
+          )}
+				</CardActions>
+			</Card>
+
     </Col>
   );
 };
@@ -138,7 +194,7 @@ const Marketplace = (props) => {
   const placebid = (ID) => {
     const hash = hashBid(bid[ID]);
     contract.bidAtAuction(ID, hash, { from: userAccount });
- 
+
     localStorage.setItem(ID, bid[ID]);
   }
 
@@ -159,7 +215,7 @@ const Marketplace = (props) => {
     <>
       <Row align="center" gutter={[26, 26]}>
         {items.map((item, key) => {
-           if (item.SellerID != userAccount.substring(2)) 
+           if (item.SellerID != userAccount.substring(2))
            {
             return <ItemCard item={item} setModal={setModal} payBid={payBid} bid={bid} setBid={setBid} placebid={placebid} />;
            }
