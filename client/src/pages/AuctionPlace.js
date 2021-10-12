@@ -62,10 +62,10 @@ const ColorButton3 = styled(Button)(({ theme }) => ({
   },
 }));
 
-const ItemCard = ({ item, setModal, payBid, bid, setBid, placebid}) => {
+const ItemCard = ({ item, setModal, payBid, bid, setBid, placebid, userAccount}) => {
 
-  console.log(Object.keys(localStorage));
-  console.log(localStorage.getItem(item.ID));
+  // console.log(Object.keys(localStorage));
+  // console.log(localStorage.getItem(item.ID));
   // localStorage.clear();
   // const [bid, setBid] = useState(0);
   const handleBidChange = (val) =>
@@ -91,7 +91,7 @@ const ItemCard = ({ item, setModal, payBid, bid, setBid, placebid}) => {
 				</CardContent>
 				<CardActions>
 
-						{item.Status == '\u0000' && localStorage.getItem(item.ID) === null ?  (
+						{item.Status == '\u0000' && localStorage.getItem(userAccount + item.ID) === null ?  (
               <div>
                 <FormLabel component="legend">
 								<b>Enter your Bid Amount</b>
@@ -111,12 +111,12 @@ const ItemCard = ({ item, setModal, payBid, bid, setBid, placebid}) => {
 
               </div>
 						) : (
-            item.Status == '\u0000' && localStorage.getItem(item.ID) !== null ? (
-              <ColorButton3 variant="contained" size="small"> Bid Placed: {localStorage.getItem(item.ID)}</ColorButton3>
+            item.Status == '\u0000' && localStorage.getItem(userAccount + item.ID) !== null ? (
+              <ColorButton3 variant="contained" size="small"> Bid Placed: {localStorage.getItem(userAccount + item.ID)}</ColorButton3>
             ) : (
-              item.Status == '\u0002' && localStorage.getItem(item.ID) !== null ? (
+              item.Status == '\u0002' && localStorage.getItem(userAccount + item.ID) !== null ? (
                 <div onClick={() => payBid(item.ID)}>
-                  <ColorButton variant="contained" size="small"> Pay Bid: {localStorage.getItem(item.ID)}</ColorButton>
+                  <ColorButton variant="contained" size="small"> Pay Bid: {localStorage.getItem(userAccount + item.ID)}</ColorButton>
                 </div>
               ) : (
                 <div>
@@ -195,15 +195,15 @@ const Marketplace = (props) => {
     const hash = hashBid(bid[ID]);
     contract.bidAtAuction(ID, hash, { from: userAccount });
 
-    localStorage.setItem(ID, bid[ID]);
+    localStorage.setItem(userAccount + ID, bid[ID]);
   }
 
   const payBid = (ID) => {
 
-    const bidValue = localStorage.getItem(ID);
+    const bidValue = localStorage.getItem(userAccount + ID);
     hashBid(bidValue);
     contract.payAndVerifyBid(ID, "publickKey", "password", { from: userAccount, value: parseInt(bidValue) });
-    localStorage.removeItem(ID);
+    localStorage.removeItem(userAccount + ID);
     // console.log(parseInt(bid));
   }
 
@@ -217,7 +217,7 @@ const Marketplace = (props) => {
         {items.map((item, key) => {
            if (item.SellerID != userAccount.substring(2))
            {
-            return <ItemCard item={item} setModal={setModal} payBid={payBid} bid={bid} setBid={setBid} placebid={placebid} />;
+            return <ItemCard item={item} setModal={setModal} payBid={payBid} bid={bid} setBid={setBid} placebid={placebid} userAccount={userAccount}/>;
            }
           })}
       </Row>
