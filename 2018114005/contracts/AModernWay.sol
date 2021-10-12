@@ -19,19 +19,27 @@ contract AModernWay {
         FOR_SALE,
         PAY_AND_VERIFY,
         SOLD,
-        DELIVERED
+        DELIVERED,
+        NO_BIDS
+    }
+
+    enum AuctionType {
+        FIRST_PRICE,
+        SECOND_PRICE,
+        AVERAGE_PRICE
     }
 
     struct Bid{
         bytes32 hashedBid;
         string password;
         uint256 bidValue;
+        bool hasBid;
         bool isVerified;
     }
 
    
     struct Auction{
-        string auctionType;
+        AuctionType auctionType;
         mapping(address => Bid) addressToBid;
         address payable[] bidders;
     }
@@ -141,7 +149,83 @@ contract AModernWay {
         items.push(newItem);
     }
 
+    /**
+     * This function is used by a seller to add a new item for the auction.
+     * @param itemName is the name of the item
+     * @param itemDescription describes the item the seller wants to sell
+     * @param auctionType describes the type of auction
+     */
+    function addItemForAuction(
+        string memory itemName,
+        string memory itemDescription,
+        AuctionType auctionType
+    ) public {
+        Item memory newItem;
+        newItem.listingID = numOfItems++;
+        newItem.name = itemName;
+        newItem.description = itemDescription;
+        newItem.sellerID = msg.sender;
+        newItem.itemStatus = status.FOR_AUCTION;
+        Auction memory auction;
+        auction.auctionType = auctionType;
+        newItem.auction = auction;
+        newItem.encryptedString = "Item not available yet, please wait for the seller to deliver it!";
+        items.push(newItem);
+    }
 
+    /**
+     * This function is called by the bidders to bid on the item.
+     * @param itemID is the id of the item
+     * @param hashedBid is the hashed value of the bid to keep the bid sealed
+     */
+    function bidAtAuction(uint256 itemID, bytes32 hashedBid)
+        public
+        onlyValidItemID(itemID)
+    {
+        require(
+            items[itemID].itemStatus == status.FOR_AUCTION,
+            "Item not available for bidding!"
+        );
+        require(
+            msg.sender != items[itemID].sellerID,
+            "Seller can not bid at their item!"
+        );
+        require(
+            items[itemID].auction.addressToBid[msg.sender].hasBid == false,
+            "Can only bid once!"
+        );
+
+        address buyerAddress = msg.sender;
+        items[itemID].auction.addressToBid[buyerAddress].hashedBid = hashedBid;
+        items[itemID].auction.addressToBid[buyerAddress].hasBid = true;
+        items[itemID].auction.bidders.push(msg.sender);
+    }
+
+
+    /**
+     * This function is used by a seller to stop the bidding.
+     * @param itemID is the id of the item
+     */
+    function stopBidding(uint256 itemID)
+        public
+        onlyValidItemID(itemID)
+        onlySeller(itemID)
+    {
+        require(
+            items[itemID].itemStatus == status.FOR_AUCTION,
+            "Invalid request, item was not up for bidding!"
+        );
+        
+        items[itemID].itemStatus = status.PAY_AND_VERIFY;
+    }
+
+
+    //  function checkHash(string memory password)
+    //     public view
+    //     returns (uint256)
+    // {
+    //     return  keccak256(abi.encodePacked(msg.value));
+    // }
 
     /**
      * This function is used to convert uint256 to string
@@ -174,88 +258,6 @@ contract AModernWay {
         }
         return string(bstr);
     }
-
-
-    /**
-     * This function is used by a seller to add a new item for the auction.
-     * @param itemName is the name of the item
-     * @param itemDescription describes the item the seller wants to sell
-     * @param auctionType describes the type of auction
-     */
-    function addItemForAuction(
-        string memory itemName,
-        string memory itemDescription,
-        string memory auctionType
-    ) public {
-        Item memory newItem;
-        newItem.listingID = numOfItems++;
-        newItem.name = itemName;
-        newItem.description = itemDescription;
-        newItem.sellerID = msg.sender;
-        newItem.itemStatus = status.FOR_AUCTION;
-        Auction memory auction;
-        auction.auctionType = auctionType;
-        newItem.auction = auction;
-        newItem.encryptedString = "Item not available yet, please wait for the seller to deliver it!";
-        items.push(newItem);
-    }
-
-
-
-
-    /**
-     * This function is called by the bidders to bid on the item.
-     * @param itemID is the id of the item
-     * @param hashedBid is the hashed value of the bid to keep the bid sealed
-     */
-    function bidAtAuction(uint256 itemID, bytes32 hashedBid)
-        public
-        onlyValidItemID(itemID)
-    {
-        require(
-            items[itemID].itemStatus == status.FOR_AUCTION,
-            "Item not available for bidding!"
-        );
-        require(
-            msg.sender != items[itemID].sellerID,
-            "Seller can not buy their item!"
-        );
-        // require(
-        //     items[itemID].auction.addressToBid[msg.sender].hashedBid == keccak256(abi.encodePacked("")),
-        //     "Can only bid once!"
-        // );
-
-        address buyerAddress = msg.sender;
-        items[itemID].auction.addressToBid[buyerAddress].hashedBid = hashedBid;
-        items[itemID].auction.bidders.push(msg.sender);
-    }
-
-
-    /**
-     * This function is used by a seller to stop the bidding.
-     * @param itemID is the id of the item
-     */
-    function stopBidding(uint256 itemID)
-        public
-        onlyValidItemID(itemID)
-        onlySeller(itemID)
-    {
-        require(
-            items[itemID].itemStatus == status.FOR_AUCTION,
-            "Invalid request, item was not up for bidding!"
-        );
-        
-        items[itemID].itemStatus = status.PAY_AND_VERIFY;
-    }
-
-
-    //  function checkHash(string memory password)
-    //     public view
-    //     returns (uint256)
-    // {
-    //     // return  keccak256(abi.encodePacked(msg.value));
-    //     return  keccak256(abi.encodePacked(msg.value));
-    // }
 
     /**
      * This function is used by the bidders to pay and verify their bidding.
@@ -300,6 +302,10 @@ contract AModernWay {
             "Item not available for sale!"
         );
         require(
+            msg.sender != items[itemID].sellerID,
+            "Seller can not buy their item!"
+        );
+        require(
             msg.value >= items[itemID].price,
             "Money less than the listing price!"
         );
@@ -311,18 +317,13 @@ contract AModernWay {
     }
 
     /**
-     * This function is used to find the winner of the auction and refund the bidders' money.
+     * This function is used to find the bidder with highest bid.
      * @param itemID is the id of the item
      */
-    function declareWinner(uint256 itemID)
+    function firstPriceAuctionWinner(uint256 itemID)
         private
         onlyValidItemID(itemID)
-    {
-        // require(
-        //     items[itemID].itemStatus == status.PAY_AND_VERIFY,
-        //     "Auction not stopped or winner already declared!"
-        // );
-       
+    { 
         address payable[] memory bidders = items[itemID].auction.bidders;
         address winner = items[itemID].sellerID;
         uint256 maxBidValue = 0;
@@ -335,18 +336,123 @@ contract AModernWay {
                 maxBidValue = bid.bidValue;
             }
         }
-        for (uint256 i = 0; i < bidders.length; i++) 
-        {
-            Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
-            if(bid.isVerified == true && bidders[i] != winner) 
-            {
-                bidders[i].transfer(bid.bidValue);
-            }
-        }
         items[itemID].price = maxBidValue;
         items[itemID].buyerID = winner;
     }
+
+    /**
+     * This function is used to find the bidder with highest bid and second highest bid value.
+     * @param itemID is the id of the item
+     */
+    function secondPriceAuctionWinner(uint256 itemID)
+        private
+        onlyValidItemID(itemID)
+    { 
+        address payable[] memory bidders = items[itemID].auction.bidders;
+        address winner = items[itemID].sellerID;
+        uint256 maxBidValue = 0;
+        uint256 secondMaxBidValue = 0;
+        for (uint256 i = 0; i < bidders.length; i++) 
+        {
+            Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
+            if(bid.isVerified == true && bid.bidValue >= maxBidValue) 
+            {
+                secondMaxBidValue = maxBidValue;
+                maxBidValue = bid.bidValue;
+                winner = bidders[i];
+            }
+            else if(bid.isVerified == true && bid.bidValue >= secondMaxBidValue) 
+            {
+                secondMaxBidValue = bid.bidValue;
+            }
+        }
+        items[itemID].buyerID = winner;
+        items[itemID].price = secondMaxBidValue;
+    }
+
+    /**
+     * @return absolute difference of @param a and @param b
+     */
+    function absDiff(uint256 a, uint256 b) internal pure returns (uint256) 
+    {
+        return a < b ? b - a : a - b;
+    }
+
+    /**
+     * This function is used to find the bidder with bid closest to average bid.
+     * @param itemID is the id of the item
+     */
+    function averagePriceAuctionWinner(uint256 itemID)
+        private
+        onlyValidItemID(itemID)
+    { 
+        address payable[] memory bidders = items[itemID].auction.bidders;
+        uint256 totalBidValue = 0;
+        uint256 totalBidders = 0;
+        for (uint256 i = 0; i < bidders.length; i++) 
+        {
+            Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
+            if(bid.isVerified == true) 
+            {
+                totalBidValue += bid.bidValue;
+                totalBidders += 1;
+            }
+        }
+        address winner = items[itemID].sellerID;
+        uint256 winnerBidValue = 0;
+        uint256 diff = totalBidValue;
+        for (uint256 i = 0; i < bidders.length; i++) 
+        {
+            Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
+            if(bid.isVerified == true && absDiff(bid.bidValue * totalBidders, totalBidValue) <= diff) 
+            {
+                diff = absDiff(bid.bidValue * totalBidders, totalBidValue);
+                winnerBidValue = bid.bidValue;
+                winner = bidders[i];
+            }
+        }
+        items[itemID].buyerID = winner;
+        items[itemID].price = winnerBidValue;
+    }
+
+    /**
+     * This function is used to find the winner of the auction and refund the bidders' money.
+     * @param itemID is the id of the item
+     */
+    function declareWinner(uint256 itemID)
+        private
+        onlyValidItemID(itemID)
+    {  
+        if(items[itemID].auction.auctionType == AuctionType.FIRST_PRICE)
+            firstPriceAuctionWinner(itemID);
+        else if(items[itemID].auction.auctionType == AuctionType.SECOND_PRICE)
+            secondPriceAuctionWinner(itemID);
+        else
+            averagePriceAuctionWinner(itemID);
+    }
     
+    /**
+     * This function is used to refund bidders' money.
+     * @param itemID is the id of the item
+     */
+    function refundMoney(uint256 itemID)
+        private
+        onlyValidItemID(itemID)
+    {       
+        address payable[] memory bidders = items[itemID].auction.bidders;
+        for (uint256 i = 0; i < bidders.length; i++) 
+        {
+            Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
+            if(bid.isVerified == true) 
+            {
+                if(bidders[i] != items[itemID].buyerID)
+                    bidders[i].transfer(bid.bidValue);
+                else if(bid.bidValue != items[itemID].price)
+                    bidders[i].transfer(bid.bidValue - items[itemID].price);
+            }
+        }
+    }
+
     /**
      * This function is used by a seller to stop the auction and declare the winner.
      * @param itemID is the id of the item
@@ -361,11 +467,11 @@ contract AModernWay {
             "Invalid request, bids not verified or auction was already stopped!"
         );
 
-        if (items[itemID].buyerID == items[itemID].sellerID)
-            items[itemID].itemStatus = status.DELIVERED;
-        else
-            items[itemID].itemStatus = status.SOLD;
+        items[itemID].itemStatus = status.SOLD;
         declareWinner(itemID);
+        refundMoney(itemID);
+        if (items[itemID].buyerID == items[itemID].sellerID)
+            items[itemID].itemStatus = status.NO_BIDS;
     }
 
     /**
@@ -439,6 +545,22 @@ contract AModernWay {
         return items[itemID].encryptedString;
     }
 
+    function toAsciiString(address x) internal pure returns (string memory) {
+        bytes memory s = new bytes(40);
+        for (uint i = 0; i < 20; i++) {
+            bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
+            bytes1 hi = bytes1(uint8(b) / 16);
+            bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
+            s[2*i] = char(hi);
+            s[2*i+1] = char(lo);            
+        }
+        return string(s);
+    }
+
+    function char(bytes1 b) internal pure returns (bytes1 c) {
+        if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
+        else return bytes1(uint8(b) + 0x57);
+    }
 
     /**
      * This function is used by a buyer to view the items up for sale.
@@ -492,23 +614,6 @@ contract AModernWay {
         return itemList;
     }
 
-    function toAsciiString(address x) internal view returns (string memory) {
-    bytes memory s = new bytes(40);
-    for (uint i = 0; i < 20; i++) {
-        bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
-        bytes1 hi = bytes1(uint8(b) / 16);
-        bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
-        s[2*i] = char(hi);
-        s[2*i+1] = char(lo);            
-    }
-    return string(s);
-}
-
-function char(bytes1 b) internal view returns (bytes1 c) {
-    if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
-    else return bytes1(uint8(b) + 0x57);
-}
-
     /**
      * This function is used by a buyer to view the listing.
      * @return a string containing list of all available Items for bidding
@@ -555,7 +660,7 @@ function char(bytes1 b) internal view returns (bytes1 c) {
         return itemList;
     }
 
-     /**
+    /**
      * This function is used by a buyer to view the listing.
      * @return a string containing list of all available Items for bidding
      */
@@ -611,6 +716,4 @@ function char(bytes1 b) internal view returns (bytes1 c) {
 
         return itemList;
     }
-
-
 }
