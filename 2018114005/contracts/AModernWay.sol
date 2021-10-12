@@ -38,7 +38,7 @@ contract AModernWay {
     }
 
     struct Auction {
-        string auctionType;
+        uint256 auctionType;
         mapping(address => Bid) addressToBid;
         address payable[] bidders;
     }
@@ -154,7 +154,7 @@ contract AModernWay {
     function addItemForAuction(
         string memory itemName,
         string memory itemDescription,
-        string memory auctionType
+        uint256 auctionType
     ) public {
         Item memory newItem;
         newItem.listingID = numOfItems++;
@@ -407,14 +407,14 @@ contract AModernWay {
         items[itemID].price = winnerBidValue;
     }
 
-    function compareStrings(string memory a, string memory b)
-        public
-        pure
-        returns (bool)
-    {
-        return (keccak256(abi.encodePacked((a))) ==
-            keccak256(abi.encodePacked((b))));
-    }
+    // function compareStrings(string memory a, string memory b)
+    //     public
+    //     pure
+    //     returns (bool)
+    // {
+    //     return (keccak256(abi.encodePacked((a))) ==
+    //         keccak256(abi.encodePacked((b))));
+    // }
 
     /**
      * This function is used to find the winner of the auction and refund the bidders' money.
@@ -422,11 +422,10 @@ contract AModernWay {
      */
 
     function declareWinner(uint256 itemID) private onlyValidItemID(itemID) {
-        if (compareStrings(items[itemID].auction.auctionType, "FirstPrice"))
+        if (items[itemID].auction.auctionType == 0)
             firstPriceAuctionWinner(itemID);
-        else if (
-            compareStrings(items[itemID].auction.auctionType, "SecondPrice")
-        ) secondPriceAuctionWinner(itemID);
+        else if (items[itemID].auction.auctionType == 1)
+            secondPriceAuctionWinner(itemID);
         else averagePriceAuctionWinner(itemID);
     }
 
