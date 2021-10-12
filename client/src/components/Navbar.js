@@ -88,12 +88,19 @@ const Navbar = (props) => {
         <Link
           variant="button"
           color="secondary"
-          href="/"
+          href="/market"
           className={classes.link}
         >
           Market Place
         </Link>
-
+        <Link
+          variant="button"
+          color="secondary"
+          href="/"
+          className={classes.link}
+        >
+          Auction Place
+        </Link>
         <Link
           variant="button"
           color="secondary"

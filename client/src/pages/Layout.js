@@ -4,6 +4,7 @@ import { Layout } from "antd";
 import { makeStyles } from '@material-ui/core/styles';
 import Navbar from "../components/Navbar";
 import Marketplace from "./Marketplace";
+import Auctionplace from "./AuctionPlace";
 import Portal from "./Portal";
 import Cart from "./Cart";
 import NotFound from "./NotFound";
@@ -28,6 +29,9 @@ const Routes = (props) => {
         >
           <Switch>
             <Route exact path="/">
+              <Auctionplace />
+            </Route>
+            <Route exact path="/market">
               <Marketplace />
             </Route>
             <Route exact path="/portal">
