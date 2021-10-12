@@ -33,8 +33,8 @@ contract AModernWay {
         bytes32 hashedBid;
         string password;
         uint256 bidValue;
+        bool hasBid;
         bool isVerified;
-        bool isBid;
     }
 
    
@@ -191,13 +191,13 @@ contract AModernWay {
             "Seller can not bid at their item!"
         );
         require(
-            items[itemID].auction.addressToBid[msg.sender].isBid == false,
+            items[itemID].auction.addressToBid[msg.sender].hasBid == false,
             "Can only bid once!"
         );
 
         address buyerAddress = msg.sender;
         items[itemID].auction.addressToBid[buyerAddress].hashedBid = hashedBid;
-        items[itemID].auction.addressToBid[buyerAddress].isBid = true;
+        items[itemID].auction.addressToBid[buyerAddress].hasBid = true;
         items[itemID].auction.bidders.push(msg.sender);
     }
 
