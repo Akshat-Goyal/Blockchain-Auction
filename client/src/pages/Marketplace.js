@@ -34,7 +34,7 @@ import InputLabel from "@material-ui/core/InputLabel";
 import { sampleImages } from "../components/SampleImages";
 import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 import { BlockchainContext } from "../App";
-// const EthCrypto = require('eth-crypto');
+const EthCrypto = require('eth-crypto');
 
 const { Meta } = Card;
 
@@ -122,6 +122,12 @@ const Marketplace = (props) => {
   console.log(web3, accounts, contract, userAccount);
 
   useEffect(() => {
+    if(localStorage.getItem(userAccount + "publicKey") == null)
+		{
+			const alice = EthCrypto.createIdentity();
+			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
+			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
+		}
     contract.viewItemsForSale().then((stringOfItems) =>
     {
      parseItem(stringOfItems);
@@ -132,8 +138,10 @@ const Marketplace = (props) => {
 
   const buyItem = (ID, Price) =>
   {
-
-    contract.buyItem(ID, "publickKey", {from: userAccount, value: Price});
+    console.log(localStorage);
+    console.log(localStorage.getItem(userAccount + "publicKey"));
+    const pub = localStorage.getItem(userAccount + "publicKey")
+    contract.buyItem(ID, "pub", {from: userAccount, value: Price});
   }
 
 

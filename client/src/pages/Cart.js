@@ -36,6 +36,7 @@ import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 import { BlockchainContext } from "../App";
 
 const { Meta } = Card;
+const EthCrypto = require('eth-crypto');
 
 const ColorButton3 = styled(Button)(({ theme }) => ({
   color: theme.palette.getContrastText(purple[500]),
@@ -45,10 +46,29 @@ const ColorButton3 = styled(Button)(({ theme }) => ({
   },
 }));
 
-const ItemCard = ({ item, setModal, getEncryptedString, encryptedString }) => {
+const ItemCard = ({ item, setModal, getEncryptedString, encryptedString, userAccount }) => {
 
   console.log(Object.keys(localStorage));
   console.log(localStorage.getItem(item.ID));
+  const [decryptedString, setDecryptedString] = useState();
+
+  // useEffect(() => {
+  //   async function getDecrpyted() {
+  //     const privateKey = localStorage.getItem(userAccount + "privateKey");
+  //     const encryptedString = item.SecretString;
+
+  //     const decrypted = await EthCrypto.decryptWithPrivateKey(
+  //         privateKey,
+  //         encryptedString
+  //     );
+
+  //     setDecryptedString(decrypted);
+  //   }
+
+  //   getDecrpyted();
+
+  // }, [])
+
 
    return (
     <Col>
@@ -129,8 +149,7 @@ const ItemCard = ({ item, setModal, getEncryptedString, encryptedString }) => {
 
 const Cart = (props) => {
 
-  const [items, setItems] = useState([
-  ]);
+  const [items, setItems] = useState([]);
   const parseItem = (stringOfItems) => {
     const listItems = stringOfItems.split("\n");
     const newList = [];
@@ -158,6 +177,14 @@ const Cart = (props) => {
   console.log(web3, accounts, contract, userAccount);
 
   useEffect(() => {
+    if(localStorage.getItem(userAccount + "publicKey") == null)
+		{
+			const alice = EthCrypto.createIdentity();
+			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
+			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
+		}
+
+
     contract.viewAllItems().then((stringOfItems) => {
       parseItem(stringOfItems);
 
@@ -191,7 +218,7 @@ const Cart = (props) => {
           console.log(item.Buyer);
           if (item.Buyer == userAccount.substring(2)) {
 
-            return <ItemCard item={item} setModal={setModal} encryptedString={encryptedString} />;
+            return <ItemCard item={item} setModal={setModal} encryptedString={encryptedString} userAccount={userAccount} />;
           }
         })}
       </Row>

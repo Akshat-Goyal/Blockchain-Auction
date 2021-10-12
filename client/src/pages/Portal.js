@@ -34,9 +34,11 @@ import InputLabel from "@material-ui/core/InputLabel";
 import Chip from "../components/Chip";
 import { sampleImages } from "../components/SampleImages";
 import { BlockchainContext } from "../App";
-// const EthCrypto = require('eth-crypto');
+const EthCrypto = require('eth-crypto');
 
 const { Meta } = Card;
+
+
 
 const ColorButton = styled(Button)(({ theme }) => ({
   color: theme.palette.getContrastText(red[700]),
@@ -202,7 +204,12 @@ const Portal = (props) => {
 		console.log(secretString);
 		console.log(localStorage);
 		const buyerPublicKey = contract.getBuyerPublicKey(item.ID, { from: userAccount });
-		await contract.deliverItem(item.ID, secretString, "sellerPublicKey", { from: userAccount });
+		// const encrypted = await EthCrypto.encryptWithPublicKey(
+		// 	buyerPublicKey, // encrypt with alice's publicKey
+		// 	secretString
+		// );
+		const pub = localStorage.getItem(userAccount + "publicKey");
+		await contract.deliverItem(item.ID, secretString, "pub", { from: userAccount });
 		// localStorage.removeItem(item.ID.toString()+"secretString");
 		console.log(item.ID);
 	}
@@ -273,7 +280,12 @@ const Portal = (props) => {
 	}
 
 	useEffect(() => {
-
+		if(localStorage.getItem(userAccount + "publicKey") == null)
+		{
+			const alice = EthCrypto.createIdentity();
+			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
+			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
+		}
 		contract.viewAllItems().then((stringOfItems) => {
 
 			parseItem(stringOfItems);

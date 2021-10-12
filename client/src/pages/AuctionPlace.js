@@ -34,7 +34,7 @@ import InputLabel from "@material-ui/core/InputLabel";
 import { sampleImages } from "../components/SampleImages";
 import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 import { BlockchainContext } from "../App";
-// const EthCrypto = require('eth-crypto');
+const EthCrypto = require('eth-crypto');
 
 const { Meta } = Card;
 
@@ -166,7 +166,13 @@ const Marketplace = (props) => {
   console.log(web3, accounts, contract, userAccount);
 
   useEffect(() => {
-    hashBid(2);
+    if(localStorage.getItem(userAccount + "publicKey") == null)
+		{
+			const alice = EthCrypto.createIdentity();
+			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
+			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
+		}
+    // hashBid(2);
     // contract.getItem().then((stringOfItems) => {
     //   console.log(stringOfItems);
     // });
@@ -202,7 +208,8 @@ const Marketplace = (props) => {
 
     const bidValue = localStorage.getItem(userAccount + ID);
     hashBid(bidValue);
-    contract.payAndVerifyBid(ID, "publickKey", "password", { from: userAccount, value: parseInt(bidValue) });
+    const pub = localStorage.getItem(userAccount + "publicKey");
+    contract.payAndVerifyBid(ID, "pub", "password", { from: userAccount, value: parseInt(bidValue) });
     localStorage.removeItem(userAccount + ID);
     // console.log(parseInt(bid));
   }
