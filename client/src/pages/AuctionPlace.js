@@ -111,9 +111,9 @@ const Marketplace = (props) => {
 
   useEffect(() => {
     hashBid(2);
-    contract.getItem().then((stringOfItems) => {
-      console.log(stringOfItems);
-    });
+    // contract.getItem().then((stringOfItems) => {
+    //   console.log(stringOfItems);
+    // });
     console.log(typeof (userAccount));
     contract.viewItemsForAuction().then((stringOfItems) => {
       parseItem(stringOfItems);
