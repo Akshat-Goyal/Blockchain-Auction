@@ -4,6 +4,7 @@ import { Card, Avatar, Row, Col, Tag, Modal, InputNumber, message } from "antd";
 import { sampleImages } from "../components/SampleImages";
 import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 import { BlockchainContext } from "../App";
+// const EthCrypto = require('eth-crypto');
 
 const { Meta } = Card;
 
@@ -62,7 +63,10 @@ const ItemCard = ({ item, setModal, payBid }) => {
 };
 
 const Marketplace = (props) => {
- 
+  
+  
+
+
   const [items, setItems] = useState([
   ]);
   const parseItem = (stringOfItems) =>
@@ -96,6 +100,7 @@ const Marketplace = (props) => {
   console.log(web3, accounts, contract, userAccount);
   
   useEffect(() => {
+    hashBid(2);
     contract.getItem().then((stringOfItems) =>
     {
      console.log(stringOfItems);
@@ -120,8 +125,7 @@ const Marketplace = (props) => {
     // const hash = web3.utils.keccak256(encoded)
     const hash = web3.utils.sha3(
     web3.utils.toHex(password + placebid),
-    { encoding: "hex" }
-    );
+    { encoding: "hex" });
     console.log(hash);
     return hash;
   }
@@ -137,6 +141,7 @@ const Marketplace = (props) => {
   
   const payBid = (ID) =>
   {
+   
     const bid = localStorage.getItem(ID);
     hashBid(bid);
     contract.payAndVerifyBid(ID, "publickKey", "password"   , {from: userAccount, value: parseInt(bid)});

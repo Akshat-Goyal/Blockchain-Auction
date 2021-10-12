@@ -4,6 +4,7 @@ import { Card, Avatar, Row, Col, Tag, Modal, InputNumber, message } from "antd";
 import Chip from "../components/Chip";
 import { sampleImages } from "../components/SampleImages";
 import { BlockchainContext } from "../App";
+// const EthCrypto = require('eth-crypto');
 
 const { Meta } = Card;
 
@@ -58,10 +59,26 @@ const Portal = (props) => {
 	}
 	const stopAuction = async(item) =>
 	{
+		// const alice = EthCrypto.createIdentity();
+
+		// const secretMessage = 'My name is Satoshi Buterin';
+		// const encrypted = await EthCrypto.encryptWithPublicKey(
+		// 	alice.publicKey, // encrypt with alice's publicKey
+		// 	secretMessage
+		// );
+
+		// const decrypted = await EthCrypto.decryptWithPrivateKey(
+		// 	alice.privateKey,
+		// 	encrypted
+		// );
+
 		await contract.stopAuction(item.ID, {from:userAccount});
+		const secretString = "encrypteString";
+		const buyerPublicKey = contract.getBuyerPublicKey(item.ID, {from:userAccount});
 		const encrypteString = "encrypteString";
-		const publicKey = "publicKey";
-		await contract.deliverItem(item.ID, encrypteString, publicKey,  {from:userAccount});
+		console.log(buyerPublicKey);
+		
+		await contract.deliverItem(item.ID, encrypteString, buyerPublicKey,  {from:userAccount});
 		console.log(item.ID);
 	}
 
