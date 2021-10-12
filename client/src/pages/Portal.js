@@ -9,20 +9,29 @@ const { Meta } = Card;
 
 
 
-const ItemCard = ({ item, setModal }) => {
-  return (
+const ItemCard = ({ item, setModal, stopBidding, stopAuction }) => {
+	return (
     <Col>
       <Card
         style={{ width: 300, margin: "20px 0" }}
         cover={<img style={{ width: "100%" }} src={sampleImages[0]} />}
         actions={[
-          true ? (
-            <div onClick={() => setModal({ visible: true, itemId: "", item: item })}>
-              Seller Options
-            </div>
-          ) : (
-            "Bid Placed"
-          ),
+			item.Status == '\u0000'  ? (
+				<div onClick={() => stopBidding(item) }>
+					  Stop Bidding
+				</div>
+			  ) : (
+				item.Status == '\u0002'  ? (
+				<div onClick={() => stopAuction(item)}>
+					Stop Auction
+			 	 </div>
+				) : (
+					<div>
+					  Delivered
+	  				</div>
+				  
+				  )
+				)
         ]}
       >
         <Meta
@@ -43,30 +52,26 @@ const ItemCard = ({ item, setModal }) => {
 };
 
 const Portal = (props) => {
-	const stopBidding = async() =>
+	const stopBidding = async(item) =>
 	{
-		await contract.stopBidding(modal.item.ID, {from:userAccount});
-		console.log(modal.item.ID);
+		await contract.stopBidding(item.ID, {from:userAccount});
 	}
-	const stopAuction = async() =>
+	const stopAuction = async(item) =>
 	{
-		await contract.stopAuction(modal.item.ID, {from:userAccount});
-		console.log(modal.item.ID);
+		await contract.stopAuction(item.ID, {from:userAccount});
+		const encrypteString = "encrypteString";
+		const publicKey = "publicKey";
+		await contract.deliverItem(item.ID, encrypteString, publicKey,  {from:userAccount});
+		console.log(item.ID);
 	}
-	
+
 	function arrayEquals(a, b) {
 		return Array.isArray(a) &&
 			Array.isArray(b) &&
 			a.length === b.length &&
 			a.every((val, index) => val === b[index]);
 	}
-	const [items, setItems] = useState([
-		{
-			name: "Abc Def",
-			auctionType: "Abc",
-			seller: "ASas",
-		},
-	]);
+	const [items, setItems] = useState([]);
 	const [inputs, setInputs] = useState({
 		ItemName: "",
 		ItemDescription: "",
@@ -87,7 +92,7 @@ const Portal = (props) => {
 	
   const handleSubmit = (event) => {
 	event.preventDefault();
-	contract.addNewItem(inputs.ItemName, inputs.ItemDescription, inputs.AuctionType, {from : userAccount}).then((stringOfItems) =>
+	contract.addItemForAuction(inputs.ItemName, inputs.ItemDescription, inputs.AuctionType, {from : userAccount}).then((stringOfItems) =>
 	{
 	  console.log(stringOfItems);
 	});
@@ -120,7 +125,7 @@ const Portal = (props) => {
 
   useEffect(() => {
 	
-	contract.viewItemsForBidding().then((stringOfItems) =>
+	contract.viewItemsForAuction().then((stringOfItems) =>
 	{
 	 
 	  parseItem(stringOfItems);
@@ -162,42 +167,11 @@ const Portal = (props) => {
 		  console.log(item);
 		  if(item.SellerID == userAccount.substring(2))
 		  {	
-			return <ItemCard item={item} setModal={setModal} />;
+			return <ItemCard item={item} setModal={setModal} stopBidding={stopBidding} stopAuction={stopAuction} />;
 		  }
 		})}
 	  </Row>
-	  <Modal
-        title="Painting By Picasso, 1756"
-        centered
-        visible={modal.visible}
-        onOk={() => {
-          message
-            .loading("Placing the bid..", 2.5)
-            .then(() => 
-            {
-              message.success("Bid Placed Successfully", 2.5) 
-            })
-            .catch(() => message.error("Error while placing the bid", 2.5));
-          setModal({ visible: false, itemId: "" });
-        //   setBid();
-        }}
-        onCancel={() => {
-          setModal({ visible: false, itemId: "" });
-        //   setBid();
-        }}
-        okText="Place Bid"
-      >
-		<button onClick={() => stopBidding() }>
-			Stop Bidding
-		</button>
-		<button onClick={() => stopAuction() }>
-			Stop Auction
-		</button>
-	    <InputNumber
-          placeholder="Enter your bid amount"
-          style={{ width: "100%" }}
-        />
-      </Modal>
+	  
 	</>
   );
 };

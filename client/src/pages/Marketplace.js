@@ -7,19 +7,40 @@ import { BlockchainContext } from "../App";
 
 const { Meta } = Card;
 
-const ItemCard = ({ item, setModal }) => {
+const ItemCard = ({ item, setModal, payBid }) => {
+
+  console.log(Object.keys(localStorage));    
+  console.log(localStorage.getItem(item.ID) ); 
+  // localStorage.clear();   
   return (
     <Col>
       <Card
         style={{ width: 300, margin: "20px 0" }}
         cover={<img style={{ width: "100%" }} src={sampleImages[0]} />}
         actions={[
-          true ? (
-            <div onClick={() => setModal({ visible: true, itemId: "", item: item })}>
-              Place Bid
+            item.Status == '\u0000' && localStorage.getItem(item.ID) === null ? (
+            <div>
+              <div onClick={() => setModal({ visible: true, itemId: "", item: item })}>
+                Place Bid
+              </div>
             </div>
           ) : (
-            "Bid Placed"
+            item.Status == '\u0000' && localStorage.getItem(item.ID) !== null  ? (
+              <div>
+                Bid Placed - {localStorage.getItem(item.ID)}
+              </div>
+            ) : (
+              item.Status == '\u0002'  && localStorage.getItem(item.ID) !== null ? (
+                <div onClick={() => payBid(item.ID)}>
+                  Pay Bid - {localStorage.getItem(item.ID)}
+                </div>
+              ) : (
+                <div>
+                  Paid
+  
+                </div>
+              )
+            )
           ),
         ]}
       >
@@ -41,6 +62,7 @@ const ItemCard = ({ item, setModal }) => {
 };
 
 const Marketplace = (props) => {
+ 
   const [items, setItems] = useState([
   ]);
   const parseItem = (stringOfItems) =>
@@ -67,36 +89,62 @@ const Marketplace = (props) => {
       setItems(newList);
     }
   }
-
+  
   const [modal, setModal] = useState({ visible: false, itemId: "" });
   const [bid, setBid] = useState();
   const {web3, accounts, contract, userAccount} = useContext(BlockchainContext);
   console.log(web3, accounts, contract, userAccount);
-
+  
   useEffect(() => {
-    
-    contract.viewItemsForBidding().then((stringOfItems) =>
+    contract.getItem().then((stringOfItems) =>
+    {
+     console.log(stringOfItems);
+    });
+    console.log(typeof(userAccount));
+    contract.viewItemsForAuction().then((stringOfItems) =>
     {
      parseItem(stringOfItems);
     });
+    // contract.checkHash("password", {from: userAccount, value: 2}).then(
+    //   (ans)=>
+    //   {
+    //     console.log(ans.logs);
+    //   }
+    // );
   }, []);
 
-  const hashBid = () =>
+  const hashBid = (placedBid) =>
   {
-    const encoded = web3.eth.abi.encodeParameters(['uint256', 'address'],[bid, userAccount])
-    const hash = web3.utils.sha3(encoded, {encoding: 'hex'})
-
+    const password = "password";
+    // const encoded = web3.eth.abi.encodeParameters(['string', 'uint256', 'address'],[password, placedBid, userAccount]);
+    // const hash = web3.utils.keccak256(encoded)
+    const hash = web3.utils.sha3(
+    web3.utils.toHex(password + placebid),
+    { encoding: "hex" }
+    );
     console.log(hash);
     return hash;
   }
-
+  
   const placebid = (ID) =>
   {
-    const hash = hashBid();
-    console.log(accounts);
+    const hash = hashBid(bid);
     contract.bidAtAuction(ID, hash, {from: userAccount});
+    // contract.checkHash("password", {from: userAccount, value: 2});
+    
+    localStorage.setItem(ID, bid);
   }
-
+  
+  const payBid = (ID) =>
+  {
+    const bid = localStorage.getItem(ID);
+    hashBid(bid);
+    contract.payAndVerifyBid(ID, "publickKey", "password"   , {from: userAccount, value: parseInt(bid)});
+    localStorage.removeItem(ID);
+    console.log(parseInt(bid));
+  }
+  
+  
   // console.log(x);
   return items.length == 0 ? (
     "No items found"
@@ -104,7 +152,7 @@ const Marketplace = (props) => {
     <>
       <Row align="center" gutter={[26, 26]}>
         {items.map((item, key) => {
-          return <ItemCard item={item} setModal={setModal} />;
+          return <ItemCard item={item} setModal={setModal} payBid={payBid} />;
         })}
       </Row>
 
@@ -115,12 +163,12 @@ const Marketplace = (props) => {
         onOk={() => {
           placebid(modal.item.ID);
           message
-            .loading("Placing the bid..", 2.5)
-            .then(() => 
-            {
-              message.success("Bid Placed Successfully", 2.5) 
-            })
-            .catch(() => message.error("Error while placing the bid", 2.5));
+          .loading("Placing the bid..", 2.5)
+          .then(() => 
+          {
+            message.success("Bid Placed Successfully", 2.5) 
+          })
+          .catch(() => message.error("Error while placing the bid", 2.5));
           setModal({ visible: false, itemId: "" });
           setBid();
         }}
@@ -129,7 +177,7 @@ const Marketplace = (props) => {
           setBid();
         }}
         okText="Place Bid"
-      >
+        >
         <img
           style={{
             width: "100%",
@@ -138,7 +186,7 @@ const Marketplace = (props) => {
             marginBottom: "20px",
           }}
           src={sampleImages[0]}
-        />
+          />
         <InputNumber
           placeholder="Enter your bid amount"
           style={{ width: "100%" }}
