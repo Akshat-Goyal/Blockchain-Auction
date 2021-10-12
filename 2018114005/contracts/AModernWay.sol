@@ -271,7 +271,7 @@ contract AModernWay {
             "Invalid request, item's not up for pay and verify!"
         );
         require(
-            keccak256(abi.encodePacked(password, uint2str(msg.value))) == items[itemID].auction.addressToBid[msg.sender].hashedBid,
+            keccak256(abi.encodePacked(password, uint2str(msg.value))) != items[itemID].auction.addressToBid[msg.sender].hashedBid,
             "Wrong Hash!"
         );
         require(
