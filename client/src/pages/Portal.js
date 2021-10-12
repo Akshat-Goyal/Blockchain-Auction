@@ -113,6 +113,7 @@ const ItemCard = ({ item, setModal, stopBidding, stopAuction, deliverItem, secre
 		setSecret(oldSecret);
 		console.log(secret[item.ID]);
 	}
+	// TODO: add if condition to show this only when fixed price
 	return (
 		<Col>
 			<Card
@@ -124,7 +125,6 @@ const ItemCard = ({ item, setModal, stopBidding, stopAuction, deliverItem, secre
 					<Typography variant="body2" color="text.secondary">
 					{item.Description}
 					</Typography>
-					// TODO: add if condition to show this only when fixed price
 					<Typography variant="body2" color="text.secondary">
 					{item.Price}
 					</Typography>
@@ -366,9 +366,9 @@ const Portal = (props) => {
 								label="Item Type"
 							>
 								<MenuItem value="FixedPrice">Fixed Price</MenuItem>
-								<MenuItem value="Type-1">Type 1</MenuItem>
-								<MenuItem value="Type-2">Type 2</MenuItem>
-								<MenuItem value="Type-3">Type 3</MenuItem>
+								<MenuItem value="FirstPrice">First Price Auction</MenuItem>
+								<MenuItem value="SecondPrice">Second Price Auction</MenuItem>
+								<MenuItem value="AveragePrice">Average Price Auction</MenuItem>
 							</Select>
 
 							{inputs.AuctionType == 'FixedPrice' ? (

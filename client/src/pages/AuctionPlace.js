@@ -85,9 +85,9 @@ const ItemCard = ({ item, setModal, payBid, bid, setBid, placebid, userAccount})
 					<Typography variant="body2" color="text.secondary">
 					Description: {item.Description}
 					</Typography>
-					{/* <Typography variant="body2" color="text.secondary">
-					Price: {item.Price}
-					</Typography> */}
+					<Typography variant="body2" color="text.secondary">
+					Auction Type: {item.AuctionType}
+					</Typography>
 				</CardContent>
 				<CardActions>
 
