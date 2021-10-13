@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.4.22 <0.9.0;
+// pragma solidity >= 0.5.0
 
 /**
  * @title A Modern Way
@@ -420,7 +421,6 @@ contract AModernWay {
      * This function is used to find the winner of the auction and refund the bidders' money.
      * @param itemID is the id of the item
      */
-
     function declareWinner(uint256 itemID) private onlyValidItemID(itemID) {
         if (items[itemID].auction.auctionType == 0)
             firstPriceAuctionWinner(itemID);
