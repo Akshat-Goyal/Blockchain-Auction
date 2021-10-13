@@ -252,7 +252,7 @@ const Portal = (props) => {
 			});
 		}
 		else {
-			contract.addItemForAuction(inputs.ItemName, inputs.ItemDescription, inputs.AuctionType, { from: userAccount }).then((id) => {
+			contract.addItemForAuction(inputs.ItemName, inputs.ItemDescription, parseInt(inputs.AuctionType), { from: userAccount }).then((id) => {
 				localStorage.setItem(id + "secretString", inputs.SecretString);
 			});
 		}
@@ -366,9 +366,9 @@ const Portal = (props) => {
 								label="Item Type"
 							>
 								<MenuItem value="FixedPrice">Fixed Price</MenuItem>
-								<MenuItem value="FirstPrice">First Price Auction</MenuItem>
-								<MenuItem value="SecondPrice">Second Price Auction</MenuItem>
-								<MenuItem value="AveragePrice">Average Price Auction</MenuItem>
+								<MenuItem value="0">First Price Auction</MenuItem>
+								<MenuItem value="1">Second Price Auction</MenuItem>
+								<MenuItem value="2">Average Price Auction</MenuItem>
 							</Select>
 
 							{inputs.AuctionType == 'FixedPrice' ? (
