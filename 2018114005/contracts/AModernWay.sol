@@ -415,43 +415,43 @@ contract AModernWay {
         items[itemID].price = winnerBidValue;
     }
 
-    /**
-     * This function is used to find the winner of the auction and refund the bidders' money.
-     * @param itemID is the id of the item
-     */
-    function declareWinner(uint256 itemID)
-        private
-        onlyValidItemID(itemID)
-    {  
-        if(items[itemID].auction.auctionType == AuctionType.FIRST_PRICE)
-            firstPriceAuctionWinner(itemID);
-        else if(items[itemID].auction.auctionType == AuctionType.SECOND_PRICE)
-            secondPriceAuctionWinner(itemID);
-        else
-            averagePriceAuctionWinner(itemID);
-    }
+    // /**
+    //  * This function is used to find the winner of the auction and refund the bidders' money.
+    //  * @param itemID is the id of the item
+    //  */
+    // function declareWinner(uint256 itemID)
+    //     private
+    //     onlyValidItemID(itemID)
+    // {  
+    //     if(items[itemID].auction.auctionType == AuctionType.FIRST_PRICE)
+    //         firstPriceAuctionWinner(itemID);
+    //     else if(items[itemID].auction.auctionType == AuctionType.SECOND_PRICE)
+    //         secondPriceAuctionWinner(itemID);
+    //     else
+    //         averagePriceAuctionWinner(itemID);
+    // }
     
-    /**
-     * This function is used to refund bidders' money.
-     * @param itemID is the id of the item
-     */
-    function refundMoney(uint256 itemID)
-        private
-        onlyValidItemID(itemID)
-    {       
-        address payable[] memory bidders = items[itemID].auction.bidders;
-        for (uint256 i = 0; i < bidders.length; i++) 
-        {
-            Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
-            if(bid.isVerified == true) 
-            {
-                if(bidders[i] != items[itemID].buyerID)
-                    bidders[i].transfer(bid.bidValue);
-                else if(bid.bidValue != items[itemID].price)
-                    bidders[i].transfer(bid.bidValue - items[itemID].price);
-            }
-        }
-    }
+    // /**
+    //  * This function is used to refund bidders' money.
+    //  * @param itemID is the id of the item
+    //  */
+    // function refundMoney(uint256 itemID)
+    //     private
+    //     onlyValidItemID(itemID)
+    // {       
+    //     address payable[] memory bidders = items[itemID].auction.bidders;
+    //     for (uint256 i = 0; i < bidders.length; i++) 
+    //     {
+    //         Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
+    //         if(bid.isVerified == true) 
+    //         {
+    //             if(bidders[i] != items[itemID].buyerID)
+    //                 bidders[i].transfer(bid.bidValue);
+    //             else if(bid.bidValue != items[itemID].price)
+    //                 bidders[i].transfer(bid.bidValue - items[itemID].price);
+    //         }
+    //     }
+    // }
 
     /**
      * This function is used by a seller to stop the auction and declare the winner.
@@ -468,8 +468,28 @@ contract AModernWay {
         );
 
         items[itemID].itemStatus = status.SOLD;
-        declareWinner(itemID);
-        refundMoney(itemID);
+        if(items[itemID].auction.auctionType == AuctionType.FIRST_PRICE)
+            firstPriceAuctionWinner(itemID);
+        else if(items[itemID].auction.auctionType == AuctionType.SECOND_PRICE)
+            secondPriceAuctionWinner(itemID);
+        else
+            averagePriceAuctionWinner(itemID);            
+        // declareWinner(itemID);
+
+        address payable[] memory bidders = items[itemID].auction.bidders;
+        for (uint256 i = 0; i < bidders.length; i++) 
+        {
+            Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
+            if(bid.isVerified == true) 
+            {
+                if(bidders[i] != items[itemID].buyerID)
+                    bidders[i].transfer(bid.bidValue);
+                else if(bid.bidValue != items[itemID].price)
+                    bidders[i].transfer(bid.bidValue - items[itemID].price);
+            }
+        }
+        // refundMoney(itemID);
+        
         if (items[itemID].buyerID == items[itemID].sellerID)
             items[itemID].itemStatus = status.NO_BIDS;
     }
@@ -660,60 +680,60 @@ contract AModernWay {
         return itemList;
     }
 
-    /**
-     * This function is used by a buyer to view the listing.
-     * @return a string containing list of all available Items for bidding
-     */
-    function viewAllItems() public view returns (string memory) {
-        string memory itemList = "";
+//     /**
+//      * This function is used by a buyer to view the listing.
+//      * @return a string containing list of all available Items for bidding
+//      */
+//     function viewAllItems() public view returns (string memory) {
+//         string memory itemList = "";
 
-        for (uint256 i = 0; i < items.length; i++) {
-            itemList = string(abi.encodePacked(itemList, "ID: "));
-            itemList = string(
-                abi.encodePacked(itemList, uint2str(items[i].listingID))
-            );
-            itemList = string(abi.encodePacked(itemList, "; Name: "));
-            itemList = string(abi.encodePacked(itemList, items[i].name));
-            itemList = string(
-                abi.encodePacked(itemList, "; Description: ")
-            );
-            itemList = string(
-                abi.encodePacked(itemList, items[i].description)
-            );
-                itemList = string(
-                abi.encodePacked(itemList, "; SellerID: ")
-            );
-            itemList = string(
-                abi.encodePacked(itemList, toAsciiString(items[i].sellerID))
-            );
-            itemList = string(
-                abi.encodePacked(itemList, "; Status: ")
-            );
-            itemList = string(
-                abi.encodePacked(itemList, items[i].itemStatus)
-            );
-            itemList = string(
-                abi.encodePacked(itemList, "; Buyer: ")
-            );
-            itemList = string(
-                abi.encodePacked(itemList, toAsciiString(items[i].buyerID))
-            );
-            itemList = string(
-                abi.encodePacked(itemList, "; Price: ")
-            );
-            itemList = string(
-                abi.encodePacked(itemList, uint2str(items[i].price))
-            );
-             itemList = string(
-                abi.encodePacked(itemList, "; SecretString: ")
-            );
-            itemList = string(
-                abi.encodePacked(itemList, items[i].encryptedString)
-            );
-            itemList = string(abi.encodePacked(itemList, "\n"));
+//         for (uint256 i = 0; i < items.length; i++) {
+//             itemList = string(abi.encodePacked(itemList, "ID: "));
+//             itemList = string(
+//                 abi.encodePacked(itemList, uint2str(items[i].listingID))
+//             );
+//             itemList = string(abi.encodePacked(itemList, "; Name: "));
+//             itemList = string(abi.encodePacked(itemList, items[i].name));
+//             itemList = string(
+//                 abi.encodePacked(itemList, "; Description: ")
+//             );
+//             itemList = string(
+//                 abi.encodePacked(itemList, items[i].description)
+//             );
+//                 itemList = string(
+//                 abi.encodePacked(itemList, "; SellerID: ")
+//             );
+//             itemList = string(
+//                 abi.encodePacked(itemList, toAsciiString(items[i].sellerID))
+//             );
+//             itemList = string(
+//                 abi.encodePacked(itemList, "; Status: ")
+//             );
+//             itemList = string(
+//                 abi.encodePacked(itemList, items[i].itemStatus)
+//             );
+//             itemList = string(
+//                 abi.encodePacked(itemList, "; Buyer: ")
+//             );
+//             itemList = string(
+//                 abi.encodePacked(itemList, toAsciiString(items[i].buyerID))
+//             );
+//             itemList = string(
+//                 abi.encodePacked(itemList, "; Price: ")
+//             );
+//             itemList = string(
+//                 abi.encodePacked(itemList, uint2str(items[i].price))
+//             );
+//              itemList = string(
+//                 abi.encodePacked(itemList, "; SecretString: ")
+//             );
+//             itemList = string(
+//                 abi.encodePacked(itemList, items[i].encryptedString)
+//             );
+//             itemList = string(abi.encodePacked(itemList, "\n"));
             
-        }
+//         }
 
-        return itemList;
-    }
+//         return itemList;
+//     }
 }
