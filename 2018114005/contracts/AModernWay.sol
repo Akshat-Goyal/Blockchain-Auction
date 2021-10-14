@@ -480,12 +480,12 @@ contract AModernWay {
      * This function is used by a seller to transfer encrypted string to the buyer.
      * @param itemID is the unique ID of the item
      * @param encryptedItem is the encrypted Secret key sent by the seller using buyers Public Key
-     * @param publicKey is the public key of the seller
      */
-    function deliverItem(
-        uint256 itemID,
-        string memory encryptedItem,
-    ) public onlyValidItemID(itemID) onlySeller(itemID) {
+    function deliverItem(uint256 itemID, string memory encryptedItem)
+        public
+        onlyValidItemID(itemID)
+        onlySeller(itemID)
+    {
         require(
             items[itemID].itemStatus == status.SOLD,
             "Item not sold or already delivered!"
