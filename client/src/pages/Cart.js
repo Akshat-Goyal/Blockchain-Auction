@@ -52,22 +52,22 @@ const ItemCard = ({ item, setModal, getEncryptedString, encryptedString, userAcc
   console.log(localStorage.getItem(item.ID));
   const [decryptedString, setDecryptedString] = useState();
 
-  // useEffect(() => {
-  //   async function getDecrpyted() {
-  //     const privateKey = localStorage.getItem(userAccount + "privateKey");
-  //     const encryptedString = item.SecretString;
+  useEffect(() => {
+    async function getDecrpyted() {
+      const privateKey = localStorage.getItem(userAccount + "privateKey");
+      const encryptedString = JSON.parse(item.SecretString);
 
-  //     const decrypted = await EthCrypto.decryptWithPrivateKey(
-  //         privateKey,
-  //         encryptedString
-  //     );
+      const decrypted = await EthCrypto.decryptWithPrivateKey(
+          privateKey,
+          encryptedString
+      );
 
-  //     setDecryptedString(decrypted);
-  //   }
+      setDecryptedString(decrypted);
+    }
 
-  //   getDecrpyted();
+    getDecrpyted();
 
-  // }, [])
+  }, [])
 
 
    return (
@@ -89,7 +89,7 @@ const ItemCard = ({ item, setModal, getEncryptedString, encryptedString, userAcc
           {(item.Status == '\u0004')?
           (
             <Typography variant="body2" color="text.secondary">
-            Secret String: {item.SecretString}
+            Secret String: {item.decryptedString}
             </Typography>
 
           ):

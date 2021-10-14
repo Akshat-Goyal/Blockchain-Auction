@@ -84,10 +84,20 @@ const ItemCard = ({ item, setModal, buyItem }) => {
   );
 };
 
+function stringToHex(str)
+{
+    const buf = Buffer.from(str, 'utf8');
+    return buf.toString('hex');
+}
+
+function hexToString(str)
+{
+    const buf = new Buffer(str, 'hex');
+    return buf.toString('utf8');
+}
+
+
 const Marketplace = (props) => {
-
-
-
 
   const [items, setItems] = useState([
   ]);
@@ -141,7 +151,8 @@ const Marketplace = (props) => {
     console.log(localStorage);
     console.log(localStorage.getItem(userAccount + "publicKey"));
     const pub = localStorage.getItem(userAccount + "publicKey")
-    contract.buyItem(ID, "pub", {from: userAccount, value: Price});
+    const pubString = hexToString(pub);
+    contract.buyItem(ID, pubString, {from: userAccount, value: Price});
   }
 
 

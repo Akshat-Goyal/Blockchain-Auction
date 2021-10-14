@@ -132,12 +132,21 @@ const ItemCard = ({ item, setModal, payBid, bid, setBid, placebid, userAccount})
   );
 };
 
+function stringToHex(str)
+{
+    const buf = Buffer.from(str, 'utf8');
+    return buf.toString('hex');
+}
+
+function hexToString(str)
+{
+    const buf = new Buffer(str, 'hex');
+    return buf.toString('utf8');
+}
+
 const Marketplace = (props) => {
 
-
-
-
-  const [items, setItems] = useState([
+ const [items, setItems] = useState([
   ]);
   const parseItem = (stringOfItems) => {
     const listItems = stringOfItems.split("\n");
@@ -209,7 +218,8 @@ const Marketplace = (props) => {
     const bidValue = localStorage.getItem(userAccount + ID);
     hashBid(bidValue);
     const pub = localStorage.getItem(userAccount + "publicKey");
-    contract.payAndVerifyBid(ID, "pub", "password", { from: userAccount, value: parseInt(bidValue) });
+    const pubString = hexToString(pub);
+    contract.payAndVerifyBid(ID, pubString, "password", { from: userAccount, value: parseInt(bidValue) });
     localStorage.removeItem(userAccount + ID);
     // console.log(parseInt(bid));
   }
