@@ -55,8 +55,8 @@ const ItemCard = ({
 }) => {
   console.log("1: ", Object.keys(localStorage));
   console.log("2: ", item.SecretString);
-  console.log("3: ", JSON.parse(item.SecretString));
-  console.log("4: ", typeof SecretString, typeof JSON.parse(item.SecretString));
+  // console.log("3: ", JSON.parse(item.SecretString));
+  // console.log("4: ", typeof item.SecretString, typeof JSON.parse(item.SecretString));
   // console.log(localStorage.getItem(item.ID));
   const [decryptedString, setDecryptedString] = useState();
 
@@ -73,7 +73,8 @@ const ItemCard = ({
       setDecryptedString(decrypted);
     }
 
-    getDecrpyted();
+    if(item.Status == '\u0004')
+      getDecrpyted();
   }, []);
 
   return (

@@ -217,17 +217,21 @@ const Portal = (props) => {
 
 	const deliverItem = async (item) => {
 		const secretString = secret[item.ID];
-		console.log(secretString);
-		console.log(localStorage);
+		if(!secretString) {
+			alert("Please enter a string!");
+			return;
+		}
+		// console.log(secretString);
+		// console.log(localStorage);
 		const buyerPublicKey = await contract.getBuyerPublicKey(item.ID, { from: userAccount });
-		console.log(buyerPublicKey);
+		// console.log(buyerPublicKey);
 		var encrypted = await EthCrypto.encryptWithPublicKey(
 			buyerPublicKey, // encrypt with alice's publicKey
 			secretString
 		);
-		console.log(encrypted);
+		// console.log(encrypted);
 		encrypted = JSON.stringify(encrypted);
-		console.log(encrypted);
+		// console.log(encrypted);
 		// const pub = localStorage.getItem(userAccount + "publicKey");
 		// console.log(pub);
 		// const pubString = hexToString(pub);
@@ -235,9 +239,9 @@ const Portal = (props) => {
 
 		await contract.deliverItem(item.ID, encrypted, { from: userAccount });
 		// console.log(encrypted, pub, pubString);
-		console.log(typeof encrypted, typeof buyerPublicKey);
+		// console.log(typeof encrypted, typeof buyerPublicKey);
 		// localStorage.removeItem(item.ID.toString()+"secretString");
-		console.log(item.ID);
+		// console.log(item.ID);
 	}
 
 	function arrayEquals(a, b) {
@@ -258,6 +262,10 @@ const Portal = (props) => {
 	const handleChange = (event) => {
 		const target = event.target;
 		const name = event.target.name;
+		if(name == 'ItemRate' && target.type != 'checkbox' && (parseInt(target.value) < 0)) {
+			alert("Please enter non negative value!");
+			return;
+		}
 		let value = target.type === 'checkbox' ? target.checked : target.value;
 		setInputs(values => ({ ...values, [name]: value }))
 	}
@@ -270,6 +278,19 @@ const Portal = (props) => {
 		console.log(inputs.ItemName);
 		console.log(inputs.ItemDescription);
 		console.log(inputs.AuctionType);
+		
+		if(!inputs.ItemName) {
+			alert("Please enter item name!");
+			return;
+		}
+		if(!inputs.ItemDescription) {
+			alert("Please enter item description!");
+			return;
+		}
+		if(inputs.AuctionType == '3' && !inputs.ItemRate || parseInt(inputs.ItemRate) < 0) {
+			alert("Please enter non negative value!");
+			return;
+		}
 		if (inputs.AuctionType == '3') {
 			console.log(inputs);
 			contract.addItemForSale(inputs.ItemName, inputs.ItemDescription, inputs.ItemRate, { from: userAccount }).then((id) => {
@@ -418,6 +439,7 @@ const Portal = (props) => {
 									<TextField
 										variant="outlined"
 										required
+										type="number"
 										fullWidth
 										name="ItemRate"
 										onChange={handleChange}

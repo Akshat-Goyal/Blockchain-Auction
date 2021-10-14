@@ -96,6 +96,7 @@ const ItemCard = ({ item, payBid, bid, setBid, placebid, userAccount}) => {
 								<TextField
 									variant="standard"
 									required
+                  type="number"
 									onChange={(value) => handleBidChange(value.target.value)}
 									value={bid[item.ID]}
 								/>
@@ -179,10 +180,12 @@ const Marketplace = (props) => {
   console.log(web3, accounts, contract, userAccount);
 
   useEffect(() => {
+    if(localStorage.getItem(userAccount + "password") == null) {
+      localStorage.setItem(userAccount + "password", "password");
+    }
     if(localStorage.getItem(userAccount + "publicKey") == null)
 		{
 			const alice = EthCrypto.createIdentity();
-			localStorage.setItem(userAccount + "password", "password");
 			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
 			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
 		}
@@ -201,19 +204,23 @@ const Marketplace = (props) => {
   }
 
   const placebid = (ID) => {
+    if(!bid[ID] || parseInt(bid[ID]) < 0) {
+      alert("Please enter a non negative integer!");
+      return;
+    }
     const hash = hashBid(bid[ID]);
-    contract.bidAtAuction(ID, hash, { from: userAccount });
-
-    localStorage.setItem(userAccount + ID, bid[ID]);
+    contract.bidAtAuction(ID, hash, { from: userAccount }).then(() => {
+      localStorage.setItem(userAccount + ID, bid[ID]);
+    })
   }
 
   const payBid = (ID) => {
 
     const bidValue = localStorage.getItem(userAccount + ID);
     const pub = localStorage.getItem(userAccount + "publicKey");
-    const pubString = hexToString(pub);
-    contract.payAndVerifyBid(ID, pubString, localStorage.getItem(userAccount + "password"), { from: userAccount, value: parseInt(bidValue) });
-    localStorage.removeItem(userAccount + ID);
+    contract.payAndVerifyBid(ID, pub, localStorage.getItem(userAccount + "password"), { from: userAccount, value: parseInt(bidValue) }).then(() => {
+      localStorage.removeItem(userAccount + ID);
+    })
   }
 
 
