@@ -190,6 +190,18 @@ const ItemCard = ({ item, setModal, stopBidding, stopAuction, deliverItem, secre
 	);
 };
 
+function stringToHex(str)
+{
+    const buf = Buffer.from(str, 'utf8');
+    return buf.toString('hex');
+}
+
+function hexToString(str)
+{
+    const buf = new Buffer(str, 'hex');
+    return buf.toString('utf8');
+}
+
 const Portal = (props) => {
 	const classes = useStyles();
 	const stopBidding = async (item) => {
@@ -203,13 +215,17 @@ const Portal = (props) => {
 		const secretString = secret[item.ID];
 		console.log(secretString);
 		console.log(localStorage);
-		const buyerPublicKey = contract.getBuyerPublicKey(item.ID, { from: userAccount });
-		// const encrypted = await EthCrypto.encryptWithPublicKey(
-		// 	buyerPublicKey, // encrypt with alice's publicKey
-		// 	secretString
-		// );
+		const buyerPublicKey = stringToHex(contract.getBuyerPublicKey(item.ID, { from: userAccount }));
+		const encrypted = await JSON.stringify(EthCrypto.encryptWithPublicKey(
+			buyerPublicKey, // encrypt with alice's publicKey
+			secretString
+		));
 		const pub = localStorage.getItem(userAccount + "publicKey");
-		await contract.deliverItem(item.ID, secretString, "pub", { from: userAccount });
+		const pubString = hexToString(pub);
+
+		await contract.deliverItem(item.ID, encrypted, { from: userAccount });
+		console.log(encrypted, pub, pubString);
+		console.log(typeof encrypted, typeof pub, typeof pubString);
 		// localStorage.removeItem(item.ID.toString()+"secretString");
 		console.log(item.ID);
 	}

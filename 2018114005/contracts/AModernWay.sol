@@ -11,7 +11,7 @@ contract AModernWay {
      * The status FOR_AUCTION signifies that the buyers can bid at auction to buy the item
      * The status FOR_SALE signifies that the buyers can buy the item at the price specified by the seller
      * The status PAY_AND_VERIFY signifies that the bidders can pay to verify their bid
-     * The status SOLD signifies that the item is sold to the buyer 
+     * The status SOLD signifies that the item is sold to the buyer
      * The status DELIVERED signifies that the item is delivered to the buyer
      */
     enum status {
@@ -29,7 +29,7 @@ contract AModernWay {
         AVERAGE_PRICE
     }
 
-    struct Bid{
+    struct Bid {
         bytes32 hashedBid;
         string password;
         uint256 bidValue;
@@ -37,14 +37,13 @@ contract AModernWay {
         bool isVerified;
     }
 
-   
-    struct Auction{
+    struct Auction {
         AuctionType auctionType;
         mapping(address => Bid) addressToBid;
         address payable[] bidders;
     }
 
-     /**
+    /**
      * This is our main item struct.
      * listingID is the the unique ID for each item
      * price is the price set by buyer for sale or paid by the winner of the auction
@@ -63,7 +62,6 @@ contract AModernWay {
         string encryptedString;
         Auction auction;
     }
-
 
     uint256 numOfItems = 0;
 
@@ -84,10 +82,7 @@ contract AModernWay {
      * @param itemID is the unique ID of the item
      */
     modifier onlyValidItemID(uint256 itemID) {
-        require(
-            itemID < numOfItems,
-            "Invalid item ID!"
-        );
+        require(itemID < numOfItems, "Invalid item ID!");
         _;
     }
 
@@ -137,7 +132,7 @@ contract AModernWay {
         string memory itemName,
         string memory itemDescription,
         uint256 itemPrice
-    ) public{
+    ) public {
         Item memory newItem;
         newItem.listingID = numOfItems++;
         newItem.name = itemName;
@@ -145,7 +140,8 @@ contract AModernWay {
         newItem.price = itemPrice;
         newItem.sellerID = msg.sender;
         newItem.itemStatus = status.FOR_SALE;
-        newItem.encryptedString = "Item not available yet, please wait for the seller to deliver it!";
+        newItem
+            .encryptedString = "Item not available yet, please wait for the seller to deliver it!";
         items.push(newItem);
     }
 
@@ -169,7 +165,8 @@ contract AModernWay {
         Auction memory auction;
         auction.auctionType = auctionType;
         newItem.auction = auction;
-        newItem.encryptedString = "Item not available yet, please wait for the seller to deliver it!";
+        newItem
+            .encryptedString = "Item not available yet, please wait for the seller to deliver it!";
         items.push(newItem);
     }
 
@@ -201,7 +198,6 @@ contract AModernWay {
         items[itemID].auction.bidders.push(msg.sender);
     }
 
-
     /**
      * This function is used by a seller to stop the bidding.
      * @param itemID is the id of the item
@@ -215,10 +211,9 @@ contract AModernWay {
             items[itemID].itemStatus == status.FOR_AUCTION,
             "Invalid request, item was not up for bidding!"
         );
-        
+
         items[itemID].itemStatus = status.PAY_AND_VERIFY;
     }
-
 
     //  function checkHash(string memory password)
     //     public view
@@ -264,23 +259,25 @@ contract AModernWay {
      * @param itemID is the id of the item
      * @param publicKey is the public key of the bidder
      */
-    function payAndVerifyBid(uint256 itemID, string memory publicKey, string memory password)
-        public payable
-        onlyValidItemID(itemID)
-    {
+    function payAndVerifyBid(
+        uint256 itemID,
+        string memory publicKey,
+        string memory password
+    ) public payable onlyValidItemID(itemID) {
         require(
             items[itemID].itemStatus == status.PAY_AND_VERIFY,
             "Invalid request, item's not up for pay and verify!"
         );
         require(
-            keccak256(abi.encodePacked(password, uint2str(msg.value))) != items[itemID].auction.addressToBid[msg.sender].hashedBid,
+            keccak256(abi.encodePacked(password, uint2str(msg.value))) !=
+                items[itemID].auction.addressToBid[msg.sender].hashedBid,
             "Wrong Hash!"
         );
         require(
             items[itemID].auction.addressToBid[msg.sender].isVerified == false,
             "Already verified!"
         );
-        
+
         address buyerAddress = msg.sender;
         items[itemID].auction.addressToBid[buyerAddress].password = password;
         items[itemID].auction.addressToBid[buyerAddress].bidValue = msg.value;
@@ -293,8 +290,9 @@ contract AModernWay {
      * @param itemID is the unique ID of the item
      * @param publicKey is the unique publick key of the buyer
      */
-    function buyItem(uint256 itemID, string memory publicKey) 
-        public payable
+    function buyItem(uint256 itemID, string memory publicKey)
+        public
+        payable
         onlyValidItemID(itemID)
     {
         require(
@@ -323,15 +321,13 @@ contract AModernWay {
     function firstPriceAuctionWinner(uint256 itemID)
         private
         onlyValidItemID(itemID)
-    { 
+    {
         address payable[] memory bidders = items[itemID].auction.bidders;
         address winner = items[itemID].sellerID;
         uint256 maxBidValue = 0;
-        for (uint256 i = 0; i < bidders.length; i++) 
-        {
+        for (uint256 i = 0; i < bidders.length; i++) {
             Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
-            if(bid.isVerified == true && bid.bidValue >= maxBidValue) 
-            {
+            if (bid.isVerified == true && bid.bidValue >= maxBidValue) {
                 winner = bidders[i];
                 maxBidValue = bid.bidValue;
             }
@@ -347,22 +343,20 @@ contract AModernWay {
     function secondPriceAuctionWinner(uint256 itemID)
         private
         onlyValidItemID(itemID)
-    { 
+    {
         address payable[] memory bidders = items[itemID].auction.bidders;
         address winner = items[itemID].sellerID;
         uint256 maxBidValue = 0;
         uint256 secondMaxBidValue = 0;
-        for (uint256 i = 0; i < bidders.length; i++) 
-        {
+        for (uint256 i = 0; i < bidders.length; i++) {
             Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
-            if(bid.isVerified == true && bid.bidValue >= maxBidValue) 
-            {
+            if (bid.isVerified == true && bid.bidValue >= maxBidValue) {
                 secondMaxBidValue = maxBidValue;
                 maxBidValue = bid.bidValue;
                 winner = bidders[i];
-            }
-            else if(bid.isVerified == true && bid.bidValue >= secondMaxBidValue) 
-            {
+            } else if (
+                bid.isVerified == true && bid.bidValue >= secondMaxBidValue
+            ) {
                 secondMaxBidValue = bid.bidValue;
             }
         }
@@ -373,8 +367,7 @@ contract AModernWay {
     /**
      * @return absolute difference of @param a and @param b
      */
-    function absDiff(uint256 a, uint256 b) internal pure returns (uint256) 
-    {
+    function absDiff(uint256 a, uint256 b) internal pure returns (uint256) {
         return a < b ? b - a : a - b;
     }
 
@@ -385,15 +378,13 @@ contract AModernWay {
     function averagePriceAuctionWinner(uint256 itemID)
         private
         onlyValidItemID(itemID)
-    { 
+    {
         address payable[] memory bidders = items[itemID].auction.bidders;
         uint256 totalBidValue = 0;
         uint256 totalBidders = 0;
-        for (uint256 i = 0; i < bidders.length; i++) 
-        {
+        for (uint256 i = 0; i < bidders.length; i++) {
             Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
-            if(bid.isVerified == true) 
-            {
+            if (bid.isVerified == true) {
                 totalBidValue += bid.bidValue;
                 totalBidders += 1;
             }
@@ -401,11 +392,12 @@ contract AModernWay {
         address winner = items[itemID].sellerID;
         uint256 winnerBidValue = 0;
         uint256 diff = totalBidValue;
-        for (uint256 i = 0; i < bidders.length; i++) 
-        {
+        for (uint256 i = 0; i < bidders.length; i++) {
             Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
-            if(bid.isVerified == true && absDiff(bid.bidValue * totalBidders, totalBidValue) <= diff) 
-            {
+            if (
+                bid.isVerified == true &&
+                absDiff(bid.bidValue * totalBidders, totalBidValue) <= diff
+            ) {
                 diff = absDiff(bid.bidValue * totalBidders, totalBidValue);
                 winnerBidValue = bid.bidValue;
                 winner = bidders[i];
@@ -419,35 +411,26 @@ contract AModernWay {
      * This function is used to find the winner of the auction and refund the bidders' money.
      * @param itemID is the id of the item
      */
-    function declareWinner(uint256 itemID)
-        private
-        onlyValidItemID(itemID)
-    {  
-        if(items[itemID].auction.auctionType == AuctionType.FIRST_PRICE)
+    function declareWinner(uint256 itemID) private onlyValidItemID(itemID) {
+        if (items[itemID].auction.auctionType == AuctionType.FIRST_PRICE)
             firstPriceAuctionWinner(itemID);
-        else if(items[itemID].auction.auctionType == AuctionType.SECOND_PRICE)
+        else if (items[itemID].auction.auctionType == AuctionType.SECOND_PRICE)
             secondPriceAuctionWinner(itemID);
-        else
-            averagePriceAuctionWinner(itemID);
+        else averagePriceAuctionWinner(itemID);
     }
-    
+
     /**
      * This function is used to refund bidders' money.
      * @param itemID is the id of the item
      */
-    function refundMoney(uint256 itemID)
-        private
-        onlyValidItemID(itemID)
-    {       
+    function refundMoney(uint256 itemID) private onlyValidItemID(itemID) {
         address payable[] memory bidders = items[itemID].auction.bidders;
-        for (uint256 i = 0; i < bidders.length; i++) 
-        {
+        for (uint256 i = 0; i < bidders.length; i++) {
             Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
-            if(bid.isVerified == true) 
-            {
-                if(bidders[i] != items[itemID].buyerID)
+            if (bid.isVerified == true) {
+                if (bidders[i] != items[itemID].buyerID)
                     bidders[i].transfer(bid.bidValue);
-                else if(bid.bidValue != items[itemID].price)
+                else if (bid.bidValue != items[itemID].price)
                     bidders[i].transfer(bid.bidValue - items[itemID].price);
             }
         }
@@ -457,7 +440,7 @@ contract AModernWay {
      * This function is used by a seller to stop the auction and declare the winner.
      * @param itemID is the id of the item
      */
-    function stopAuction(uint256 itemID) 
+    function stopAuction(uint256 itemID)
         public
         onlyValidItemID(itemID)
         onlySeller(itemID)
@@ -486,7 +469,8 @@ contract AModernWay {
         returns (string memory)
     {
         require(
-            items[itemID].itemStatus == status.SOLD || items[itemID].itemStatus == status.DELIVERED,
+            items[itemID].itemStatus == status.SOLD ||
+                items[itemID].itemStatus == status.DELIVERED,
             "Buyer not declared yet!"
         );
         return addressToPublicKey[items[itemID].buyerID];
@@ -498,36 +482,34 @@ contract AModernWay {
      * @param encryptedItem is the encrypted Secret key sent by the seller using buyers Public Key
      * @param publicKey is the public key of the seller
      */
-    function deliverItem(uint256 itemID, string memory encryptedItem, string memory publicKey)
-        public
-        onlyValidItemID(itemID)
-        onlySeller(itemID)
-    {
+    function deliverItem(
+        uint256 itemID,
+        string memory encryptedItem,
+    ) public onlyValidItemID(itemID) onlySeller(itemID) {
         require(
             items[itemID].itemStatus == status.SOLD,
             "Item not sold or already delivered!"
         );
 
-        addressToPublicKey[msg.sender] = publicKey;
         items[itemID].encryptedString = encryptedItem;
         items[itemID].itemStatus = status.DELIVERED;
         items[itemID].sellerID.transfer(items[itemID].price);
     }
 
-    /**
-     * This function is used to get the public Key of the seller.
-     * @param itemID is the unique ID of the item
-     * @return Public Key of the buyer who bought item with ID = itemID
-     */
-    function getSellerPublicKey(uint256 itemID)
-        public
-        view
-        onlyValidItemID(itemID)
-        onlyDeliveredItem(itemID)
-        returns (string memory)
-    {
-        return addressToPublicKey[items[itemID].sellerID];
-    }
+    // /**
+    //  * This function is used to get the public Key of the seller.
+    //  * @param itemID is the unique ID of the item
+    //  * @return Public Key of the buyer who bought item with ID = itemID
+    //  */
+    // function getSellerPublicKey(uint256 itemID)
+    //     public
+    //     view
+    //     onlyValidItemID(itemID)
+    //     onlyDeliveredItem(itemID)
+    //     returns (string memory)
+    // {
+    //     return addressToPublicKey[items[itemID].sellerID];
+    // }
 
     /**
      * This function is used by the buyer to get the encrypted Secret string.
@@ -547,12 +529,12 @@ contract AModernWay {
 
     function toAsciiString(address x) internal pure returns (string memory) {
         bytes memory s = new bytes(40);
-        for (uint i = 0; i < 20; i++) {
-            bytes1 b = bytes1(uint8(uint(uint160(x)) / (2**(8*(19 - i)))));
+        for (uint256 i = 0; i < 20; i++) {
+            bytes1 b = bytes1(uint8(uint256(uint160(x)) / (2**(8 * (19 - i)))));
             bytes1 hi = bytes1(uint8(b) / 16);
             bytes1 lo = bytes1(uint8(b) - 16 * uint8(hi));
-            s[2*i] = char(hi);
-            s[2*i+1] = char(lo);            
+            s[2 * i] = char(hi);
+            s[2 * i + 1] = char(lo);
         }
         return string(s);
     }
@@ -571,7 +553,7 @@ contract AModernWay {
 
         for (uint256 i = 0; i < items.length; i++) {
             if (items[i].itemStatus == status.FOR_SALE) {
-             itemList = string(abi.encodePacked(itemList, "ID: "));
+                itemList = string(abi.encodePacked(itemList, "ID: "));
                 itemList = string(
                     abi.encodePacked(itemList, uint2str(items[i].listingID))
                 );
@@ -583,27 +565,19 @@ contract AModernWay {
                 itemList = string(
                     abi.encodePacked(itemList, items[i].description)
                 );
-                   itemList = string(
-                    abi.encodePacked(itemList, "; SellerID: ")
-                );
+                itemList = string(abi.encodePacked(itemList, "; SellerID: "));
                 itemList = string(
                     abi.encodePacked(itemList, toAsciiString(items[i].sellerID))
                 );
-                itemList = string(
-                    abi.encodePacked(itemList, "; Status: ")
-                );
+                itemList = string(abi.encodePacked(itemList, "; Status: "));
                 itemList = string(
                     abi.encodePacked(itemList, items[i].itemStatus)
                 );
-                itemList = string(
-                    abi.encodePacked(itemList, "; Buyer: ")
-                );
+                itemList = string(abi.encodePacked(itemList, "; Buyer: "));
                 itemList = string(
                     abi.encodePacked(itemList, toAsciiString(items[i].buyerID))
                 );
-                itemList = string(
-                    abi.encodePacked(itemList, "; Price: ")
-                );
+                itemList = string(abi.encodePacked(itemList, "; Price: "));
                 itemList = string(
                     abi.encodePacked(itemList, uint2str(items[i].price))
                 );
@@ -622,7 +596,10 @@ contract AModernWay {
         string memory itemList = "";
 
         for (uint256 i = 0; i < items.length; i++) {
-            if (items[i].itemStatus ==  status.FOR_AUCTION || items[i].itemStatus == status.PAY_AND_VERIFY) {
+            if (
+                items[i].itemStatus == status.FOR_AUCTION ||
+                items[i].itemStatus == status.PAY_AND_VERIFY
+            ) {
                 itemList = string(abi.encodePacked(itemList, "ID: "));
                 itemList = string(
                     abi.encodePacked(itemList, uint2str(items[i].listingID))
@@ -635,21 +612,15 @@ contract AModernWay {
                 itemList = string(
                     abi.encodePacked(itemList, items[i].description)
                 );
-                   itemList = string(
-                    abi.encodePacked(itemList, "; SellerID: ")
-                );
+                itemList = string(abi.encodePacked(itemList, "; SellerID: "));
                 itemList = string(
                     abi.encodePacked(itemList, toAsciiString(items[i].sellerID))
                 );
-                itemList = string(
-                    abi.encodePacked(itemList, "; Status: ")
-                );
+                itemList = string(abi.encodePacked(itemList, "; Status: "));
                 itemList = string(
                     abi.encodePacked(itemList, items[i].itemStatus)
                 );
-                itemList = string(
-                    abi.encodePacked(itemList, "; Buyer: ")
-                );
+                itemList = string(abi.encodePacked(itemList, "; Buyer: "));
                 itemList = string(
                     abi.encodePacked(itemList, toAsciiString(items[i].buyerID))
                 );
@@ -674,44 +645,27 @@ contract AModernWay {
             );
             itemList = string(abi.encodePacked(itemList, "; Name: "));
             itemList = string(abi.encodePacked(itemList, items[i].name));
-            itemList = string(
-                abi.encodePacked(itemList, "; Description: ")
-            );
-            itemList = string(
-                abi.encodePacked(itemList, items[i].description)
-            );
-                itemList = string(
-                abi.encodePacked(itemList, "; SellerID: ")
-            );
+            itemList = string(abi.encodePacked(itemList, "; Description: "));
+            itemList = string(abi.encodePacked(itemList, items[i].description));
+            itemList = string(abi.encodePacked(itemList, "; SellerID: "));
             itemList = string(
                 abi.encodePacked(itemList, toAsciiString(items[i].sellerID))
             );
-            itemList = string(
-                abi.encodePacked(itemList, "; Status: ")
-            );
-            itemList = string(
-                abi.encodePacked(itemList, items[i].itemStatus)
-            );
-            itemList = string(
-                abi.encodePacked(itemList, "; Buyer: ")
-            );
+            itemList = string(abi.encodePacked(itemList, "; Status: "));
+            itemList = string(abi.encodePacked(itemList, items[i].itemStatus));
+            itemList = string(abi.encodePacked(itemList, "; Buyer: "));
             itemList = string(
                 abi.encodePacked(itemList, toAsciiString(items[i].buyerID))
             );
-            itemList = string(
-                abi.encodePacked(itemList, "; Price: ")
-            );
+            itemList = string(abi.encodePacked(itemList, "; Price: "));
             itemList = string(
                 abi.encodePacked(itemList, uint2str(items[i].price))
             );
-             itemList = string(
-                abi.encodePacked(itemList, "; SecretString: ")
-            );
+            itemList = string(abi.encodePacked(itemList, "; SecretString: "));
             itemList = string(
                 abi.encodePacked(itemList, items[i].encryptedString)
             );
             itemList = string(abi.encodePacked(itemList, "\n"));
-            
         }
 
         return itemList;
