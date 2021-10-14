@@ -50,7 +50,6 @@ const ItemCard = ({ item, setModal, buyItem }) => {
 
   console.log(Object.keys(localStorage));
   console.log(localStorage.getItem(item.ID) );
-  // localStorage.clear();
   return (
     <Col>
     			<Card
@@ -115,9 +114,9 @@ const Marketplace = (props) => {
         const name = keyValue[0].trim();
         const value = keyValue[1].trim();
         item[name] = value;
-        // console.log(name, value);
       }
-      newList.push(item);
+      if(item.Status == '\u0001')
+        newList.push(item);
     }
     console.log(newList);
     if(newList != items)
@@ -138,7 +137,7 @@ const Marketplace = (props) => {
 			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
 			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
 		}
-    contract.viewItemsForSale().then((stringOfItems) =>
+    contract.viewAllItems().then((stringOfItems) =>
     {
      parseItem(stringOfItems);
     });

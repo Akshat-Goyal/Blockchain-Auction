@@ -5,7 +5,7 @@ import Lottie from "react-lottie";
 import trufflecontract from 'truffle-contract';
 
 import getWeb3 from "./getWeb3";
-import AuctionContract from "./contracts/Auction.json";
+// import AuctionContract from "./contracts/Auction.json";
 import ModernWay from "./contracts/AModernWay.json";
 import Layout from "./pages/Layout";
 import * as loader from "./assets/loader.json";
@@ -34,7 +34,7 @@ const App = (props) => {
         // Get the contract instance.
         const networkId = await web3.eth.net.getId();
         console.log(networkId);
-        const deployedNetwork = AuctionContract.networks[networkId];
+        // const deployedNetwork = AuctionContract.networks[networkId];
 
         const contractUndeployed = trufflecontract(ModernWay);
         contractUndeployed.setProvider(web3.currentProvider);

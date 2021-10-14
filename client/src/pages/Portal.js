@@ -41,19 +41,19 @@ const { Meta } = Card;
 
 
 const ColorButton = styled(Button)(({ theme }) => ({
-  color: theme.palette.getContrastText(red[700]),
-  backgroundColor: red[700],
-  '&:hover': {
-    backgroundColor: red[900],
-  },
+	color: theme.palette.getContrastText(red[700]),
+	backgroundColor: red[700],
+	'&:hover': {
+		backgroundColor: red[900],
+	},
 }));
 
 const ColorButton2 = styled(Button)(({ theme }) => ({
-  color: theme.palette.getContrastText(green[500]),
-  backgroundColor: green[500],
-  '&:hover': {
-    backgroundColor: green[700],
-  },
+	color: theme.palette.getContrastText(green[500]),
+	backgroundColor: green[500],
+	'&:hover': {
+		backgroundColor: green[700],
+	},
 }));
 
 
@@ -120,23 +120,29 @@ const ItemCard = ({ item, setModal, stopBidding, stopAuction, deliverItem, secre
 				sx={{ maxWidth: 345 }}>
 				<CardContent>
 					<Typography gutterBottom variant="h5" component="div">
-					{item.Name}
+						{item.Name}
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
-					{item.Description}
+						{item.Description}
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
-					{item.Price}
+						{item.Type}
 					</Typography>
+					{item.Status == '\u0000' || item.Status == '\u0002' ?
+						(<Typography></Typography>) :
+						(<Typography variant="body2" color="text.secondary">
+							{item.Price}
+						</Typography>)
+					}
 				</CardContent>
 				<CardActions>
 
-						{item.Status == '\u0000'  ? (
-							<Typography onClick={() => stopBidding(item) }>
-								{/* <Button variant="outlined" color="error" size="small">Stop Bidding</Button> */}
-								<ColorButton variant="outlined" size="small">Stop Bidding</ColorButton>
-							</Typography>
-						) : (
+					{item.Status == '\u0000' ? (
+						<Typography onClick={() => stopBidding(item)}>
+							{/* <Button variant="outlined" color="error" size="small">Stop Bidding</Button> */}
+							<ColorButton variant="outlined" size="small">Stop Bidding</ColorButton>
+						</Typography>
+					) : (
 
 						item.Status == '\u0001' ? (
 							<Typography>
@@ -144,44 +150,44 @@ const ItemCard = ({ item, setModal, stopBidding, stopAuction, deliverItem, secre
 							</Typography>
 						) : (
 
-						item.Status == '\u0002'  ? (
-						<Typography onClick={() => stopAuction(item)}>
-							{/* <Button variant="contained" color="error" size="small">Stop Auction</Button> */}
-							<ColorButton variant="contained" size="small">Stop Auction</ColorButton>
-						</Typography>
-						) : (
+							item.Status == '\u0002' ? (
+								<Typography onClick={() => stopAuction(item)}>
+									{/* <Button variant="contained" color="error" size="small">Stop Auction</Button> */}
+									<ColorButton variant="contained" size="small">Stop Auction</ColorButton>
+								</Typography>
+							) : (
 
-						item.Status == '\u0003' ? (
+								item.Status == '\u0003' ? (
 
-							<div>
-								<br/>
-								<FormLabel component="legend">
-								<b>Enter your Secret String</b>
-								<br />
-								</FormLabel>
-								<TextField
-									variant="standard"
-									required
-									onChange={(value) => handleSecretChange(value.target.value)}
-									value={secret[item.ID]}
-								// value={inputs.AuctionType || ""}
-								/>
-								<br/>
-								<br/>
-								<div onClick={() => deliverItem(item)}>
-									<ColorButton2 variant="contained" size="small">Deliver</ColorButton2>
-								</div>
+									<div>
+										<br />
+										<FormLabel component="legend">
+											<b>Enter your Secret String</b>
+											<br />
+										</FormLabel>
+										<TextField
+											variant="standard"
+											required
+											onChange={(value) => handleSecretChange(value.target.value)}
+											value={secret[item.ID]}
+										// value={inputs.AuctionType || ""}
+										/>
+										<br />
+										<br />
+										<div onClick={() => deliverItem(item)}>
+											<ColorButton2 variant="contained" size="small">Deliver</ColorButton2>
+										</div>
 
-								</div>
-						) : (
+									</div>
+								) : (
 
-						<Typography>
-						{/* <Button variant="outlined" color="success">Delivered</Button> */}
-						<ColorButton2 variant="outlined" size="small">Delivered</ColorButton2>
-						</Typography>
+									<Typography>
+										{/* <Button variant="outlined" color="success">Delivered</Button> */}
+										<ColorButton2 variant="outlined" size="small">Delivered</ColorButton2>
+									</Typography>
 
-						)
-						)))}
+								)
+							)))}
 				</CardActions>
 			</Card>
 			<br />
@@ -190,16 +196,14 @@ const ItemCard = ({ item, setModal, stopBidding, stopAuction, deliverItem, secre
 	);
 };
 
-function stringToHex(str)
-{
-    const buf = Buffer.from(str, 'utf8');
-    return buf.toString('hex');
+function stringToHex(str) {
+	const buf = Buffer.from(str, 'utf8');
+	return buf.toString('hex');
 }
 
-function hexToString(str)
-{
-    const buf = new Buffer(str, 'hex');
-    return buf.toString('utf8');
+function hexToString(str) {
+	const buf = new Buffer(str, 'hex');
+	return buf.toString('utf8');
 }
 
 const Portal = (props) => {
@@ -240,7 +244,7 @@ const Portal = (props) => {
 	const [inputs, setInputs] = useState({
 		ItemName: "",
 		ItemDescription: "",
-		AuctionType: "Type-1"
+		AuctionType: "3"
 	});
 	const [modal, setModal] = useState({ visible: false, itemId: "" });
 	const [secret, setSecret] = useState({});
@@ -260,7 +264,7 @@ const Portal = (props) => {
 		console.log(inputs.ItemName);
 		console.log(inputs.ItemDescription);
 		console.log(inputs.AuctionType);
-		if (inputs.AuctionType == 'FixedPrice') {
+		if (inputs.AuctionType == '3') {
 			console.log(inputs);
 			contract.addItemForSale(inputs.ItemName, inputs.ItemDescription, inputs.ItemRate, { from: userAccount }).then((id) => {
 				console.log(id);
@@ -285,7 +289,18 @@ const Portal = (props) => {
 				const name = keyValue[0].trim();
 				const value = keyValue[1].trim();
 				item[name] = value;
-				// console.log(name, value);
+			}
+			if (item.AuctionType == '0') {
+				item["Type"] = "First Price Auction";
+			}
+			else if (item.AuctionType == '1') {
+				item["Type"] = "Second Price Auction";
+			}
+			else if (item.AuctionType == '2') {
+				item["Type"] = "Average Price Auction";
+			}
+			else {
+				item["Type"] = "Fixed Price";
 			}
 			newList.push(item);
 		}
@@ -296,8 +311,7 @@ const Portal = (props) => {
 	}
 
 	useEffect(() => {
-		if(localStorage.getItem(userAccount + "publicKey") == null)
-		{
+		if (localStorage.getItem(userAccount + "publicKey") == null) {
 			const alice = EthCrypto.createIdentity();
 			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
 			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
@@ -381,29 +395,29 @@ const Portal = (props) => {
 								onChange={handleChange}
 								label="Item Type"
 							>
-								<MenuItem value="FixedPrice">Fixed Price</MenuItem>
+								<MenuItem value="3">Fixed Price</MenuItem>
 								<MenuItem value="0">First Price Auction</MenuItem>
 								<MenuItem value="1">Second Price Auction</MenuItem>
 								<MenuItem value="2">Average Price Auction</MenuItem>
 							</Select>
 
-							{inputs.AuctionType == 'FixedPrice' ? (
+							{inputs.AuctionType == '3' ? (
 
 								<div>
-								<br/>
-								<FormLabel component="legend">
-								<b>Enter Price</b>
-								<br />
-								</FormLabel>
-								<TextField
-									variant="outlined"
-									required
-									fullWidth
-									name="ItemRate"
-									onChange={handleChange}
-									value={inputs.ItemRate || ""}
-								// value={inputs.AuctionType || ""}
-								/>
+									<br />
+									<FormLabel component="legend">
+										<b>Enter Price</b>
+										<br />
+									</FormLabel>
+									<TextField
+										variant="outlined"
+										required
+										fullWidth
+										name="ItemRate"
+										onChange={handleChange}
+										value={inputs.ItemRate || ""}
+									// value={inputs.AuctionType || ""}
+									/>
 
 								</div>
 							) : (

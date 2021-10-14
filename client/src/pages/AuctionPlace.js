@@ -62,12 +62,8 @@ const ColorButton3 = styled(Button)(({ theme }) => ({
   },
 }));
 
-const ItemCard = ({ item, setModal, payBid, bid, setBid, placebid, userAccount}) => {
+const ItemCard = ({ item, payBid, bid, setBid, placebid, userAccount}) => {
 
-  // console.log(Object.keys(localStorage));
-  // console.log(localStorage.getItem(item.ID));
-  // localStorage.clear();
-  // const [bid, setBid] = useState(0);
   const handleBidChange = (val) =>
   {
     var oldBids = bid;
@@ -86,7 +82,7 @@ const ItemCard = ({ item, setModal, payBid, bid, setBid, placebid, userAccount})
 					Description: {item.Description}
 					</Typography>
 					<Typography variant="body2" color="text.secondary">
-					Auction Type: {item.AuctionType}
+					Auction Type: {item.AuctionName}
 					</Typography>
 				</CardContent>
 				<CardActions>
@@ -159,9 +155,18 @@ const Marketplace = (props) => {
         const name = keyValue[0].trim();
         const value = keyValue[1].trim();
         item[name] = value;
-        // console.log(name, value);
       }
-      newList.push(item);
+      if(item.AuctionType == 0) {
+        item["AuctionName"] = "First Price Auction";
+      }
+      else if(item.AuctionType == 1) {
+        item["AuctionName"] = "Second Price Auction";
+      }
+      else if(item.AuctionType == 2){
+        item["AuctionName"] = "Average Price Auction";
+      }
+      if(item.Status == '\u0000' || item.Status == '\u0002')
+        newList.push(item);
     }
     console.log(newList);
     if (newList != items) {
@@ -169,7 +174,6 @@ const Marketplace = (props) => {
     }
   }
 
-  const [modal, setModal] = useState({ visible: false, itemId: "" });
   const [bid, setBid] = useState({});
   const { web3, accounts, contract, userAccount } = useContext(BlockchainContext);
   console.log(web3, accounts, contract, userAccount);
@@ -178,31 +182,21 @@ const Marketplace = (props) => {
     if(localStorage.getItem(userAccount + "publicKey") == null)
 		{
 			const alice = EthCrypto.createIdentity();
+			localStorage.setItem(userAccount + "password", "password");
 			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
 			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
 		}
-    // hashBid(2);
-    // contract.getItem().then((stringOfItems) => {
-    //   console.log(stringOfItems);
-    // });
-    console.log(typeof (userAccount));
-    contract.viewItemsForAuction().then((stringOfItems) => {
+    // console.log(typeof (userAccount));
+    contract.viewAllItems().then((stringOfItems) => {
       parseItem(stringOfItems);
     });
-    // contract.checkHash("password", {from: userAccount, value: 2}).then(
-    //   (ans)=>
-    //   {
-    //     console.log(ans.logs);
-    //   }
-    // );
   }, []);
 
   const hashBid = (placedBid) => {
-    const password = "password";
+    const password = localStorage.getItem(userAccount + "password");
     const hash = web3.utils.sha3(
       web3.utils.toHex(password + placebid),
       { encoding: "hex" });
-    console.log(hash);
     return hash;
   }
 
@@ -216,12 +210,10 @@ const Marketplace = (props) => {
   const payBid = (ID) => {
 
     const bidValue = localStorage.getItem(userAccount + ID);
-    hashBid(bidValue);
     const pub = localStorage.getItem(userAccount + "publicKey");
     const pubString = hexToString(pub);
-    contract.payAndVerifyBid(ID, pubString, "password", { from: userAccount, value: parseInt(bidValue) });
+    contract.payAndVerifyBid(ID, pubString, localStorage.getItem(userAccount + "password"), { from: userAccount, value: parseInt(bidValue) });
     localStorage.removeItem(userAccount + ID);
-    // console.log(parseInt(bid));
   }
 
 
@@ -234,51 +226,10 @@ const Marketplace = (props) => {
         {items.map((item, key) => {
            if (item.SellerID != userAccount.substring(2))
            {
-            return <ItemCard item={item} setModal={setModal} payBid={payBid} bid={bid} setBid={setBid} placebid={placebid} userAccount={userAccount}/>;
+            return <ItemCard item={item} payBid={payBid} bid={bid} setBid={setBid} placebid={placebid} userAccount={userAccount}/>;
            }
           })}
       </Row>
-
-      {/* <Modal
-        title="Painting By Picasso, 1756"
-        centered
-        visible={modal.visible}
-        onOk={() => {
-          placebid(modal.item.ID);
-          message
-            .loading("Placing the bid..", 2.5)
-            .then(() => {
-              message.success("Bid Placed Successfully", 2.5)
-            })
-            .catch(() => message.error("Error while placing the bid", 2.5));
-          setModal({ visible: false, itemId: "" });
-          setBid();
-        }}
-        onCancel={() => {
-          setModal({ visible: false, itemId: "" });
-          setBid();
-        }}
-        okText="Place Bid"
-      >
-        <img
-          style={{
-            width: "100%",
-            maxHeight: "240px",
-            objectFit: "cover",
-            marginBottom: "20px",
-          }}
-          src={sampleImages[0]}
-        />
-        <InputNumber
-          placeholder="Enter your bid amount"
-          style={{ width: "100%" }}
-          addonAfter={
-            <EthereumIcon style={{ height: "1rem", marginRight: "5px" }} />
-          }
-          value={bid}
-          onChange={(value) => setBid(value)}
-        />
-      </Modal> */}
     </>
   );
 };

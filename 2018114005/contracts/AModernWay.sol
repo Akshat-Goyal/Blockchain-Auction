@@ -140,6 +140,9 @@ contract AModernWay {
         newItem.price = itemPrice;
         newItem.sellerID = msg.sender;
         newItem.itemStatus = status.FOR_SALE;
+        Auction memory auction;
+        auction.auctionType = 3;
+        newItem.auction = auction;
         newItem
             .encryptedString = "Item not available yet, please wait for the seller to deliver it!";
         items.push(newItem);
@@ -701,11 +704,17 @@ contract AModernWay {
             itemList = string(
                 abi.encodePacked(itemList, uint2str(items[i].price))
             );
-             itemList = string(
+            itemList = string(
                 abi.encodePacked(itemList, "; SecretString: ")
             );
             itemList = string(
                 abi.encodePacked(itemList, items[i].encryptedString)
+            );
+            itemList = string(
+                abi.encodePacked(itemList, "; AuctionType: ")
+            );
+            itemList = string(
+                abi.encodePacked(itemList, uint2str(items[i].auction.auctionType))
             );
             itemList = string(abi.encodePacked(itemList, "\n"));
             
