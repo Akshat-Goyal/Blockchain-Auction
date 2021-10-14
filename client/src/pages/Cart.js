@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Avatar, Row, Col, Tag, Modal, InputNumber, message } from "antd";
-import { makeStyles } from '@material-ui/core/styles';
-import { styled } from '@material-ui/core/styles';
-import { red, green, purple } from '@material-ui/core/colors';
+import { makeStyles } from "@material-ui/core/styles";
+import { styled } from "@material-ui/core/styles";
+import { red, green, purple } from "@material-ui/core/colors";
 // import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import CssBaseline from "@material-ui/core/CssBaseline";
@@ -36,20 +36,28 @@ import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 import { BlockchainContext } from "../App";
 
 const { Meta } = Card;
-const EthCrypto = require('eth-crypto');
+const EthCrypto = require("eth-crypto");
 
 const ColorButton3 = styled(Button)(({ theme }) => ({
   color: theme.palette.getContrastText(purple[500]),
   backgroundColor: purple[500],
-  '&:hover': {
+  "&:hover": {
     backgroundColor: purple[700],
   },
 }));
 
-const ItemCard = ({ item, setModal, getEncryptedString, encryptedString, userAccount }) => {
-
-  console.log(Object.keys(localStorage));
-  console.log(localStorage.getItem(item.ID));
+const ItemCard = ({
+  item,
+  setModal,
+  getEncryptedString,
+  encryptedString,
+  userAccount,
+}) => {
+  console.log("1: ", Object.keys(localStorage));
+  console.log("2: ", item.SecretString);
+  console.log("3: ", JSON.parse(item.SecretString));
+  console.log("4: ", typeof SecretString, typeof JSON.parse(item.SecretString));
+  // console.log(localStorage.getItem(item.ID));
   const [decryptedString, setDecryptedString] = useState();
 
   useEffect(() => {
@@ -58,50 +66,46 @@ const ItemCard = ({ item, setModal, getEncryptedString, encryptedString, userAcc
       const encryptedString = JSON.parse(item.SecretString);
 
       const decrypted = await EthCrypto.decryptWithPrivateKey(
-          privateKey,
-          encryptedString
+        privateKey,
+        encryptedString
       );
 
       setDecryptedString(decrypted);
     }
 
     getDecrpyted();
+  }, []);
 
-  }, [])
-
-
-   return (
+  return (
     <Col>
-        			<Card
-				sx={{ maxWidth: 345 }}>
-				<CardContent>
-					<Typography gutterBottom variant="h4" component="div">
-					{item.Name}
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-					Description: {item.Description}
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-					Price: {item.Price}
-					</Typography>
-            </CardContent>
-            <CardActions>
-          {(item.Status == '\u0004')?
-          (
+      <Card sx={{ maxWidth: 345 }}>
+        <CardContent>
+          <Typography gutterBottom variant="h4" component="div">
+            {item.Name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Description: {item.Description}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Price: {item.Price}
+          </Typography>
+        </CardContent>
+        <CardActions>
+          {item.Status == "\u0004" ? (
             <Typography variant="body2" color="text.secondary">
-            Secret String: {item.decryptedString}
+              Secret String: {decryptedString}
             </Typography>
-
-          ):
-          (
+          ) : (
             <Typography variant="body2" color="text.secondary">
-            <ColorButton3 variant="outlined">Waiting for Delivery</ColorButton3>
+              <ColorButton3 variant="outlined">
+                Waiting for Delivery
+              </ColorButton3>
             </Typography>
           )}
-				</CardActions>
-			</Card>
-			<br />
-			<br />
+        </CardActions>
+      </Card>
+      <br />
+      <br />
       {/* <Card
         style={{ width: 300, margin: "20px 0" }}
         cover={<img style={{ width: "100%" }} src={sampleImages[0]} />}
@@ -148,7 +152,6 @@ const ItemCard = ({ item, setModal, getEncryptedString, encryptedString, userAcc
 };
 
 const Cart = (props) => {
-
   const [items, setItems] = useState([]);
   const parseItem = (stringOfItems) => {
     const listItems = stringOfItems.split("\n");
@@ -157,7 +160,7 @@ const Cart = (props) => {
       const attributes = listItems[i].split(";");
       const item = {};
       for (var j = 0; j < attributes.length; j++) {
-        const keyValue = attributes[j].split(":");
+        const keyValue = attributes[j].split("^");
         const name = keyValue[0].trim();
         const value = keyValue[1].trim();
         item[name] = value;
@@ -169,31 +172,25 @@ const Cart = (props) => {
     if (newList != items) {
       setItems(newList);
     }
-  }
+  };
 
   const [modal, setModal] = useState({ visible: false, itemId: "" });
   const [encryptedString, setEncryptedString] = useState({});
-  const { web3, accounts, contract, userAccount } = useContext(BlockchainContext);
+  const { web3, accounts, contract, userAccount } =
+    useContext(BlockchainContext);
   console.log(web3, accounts, contract, userAccount);
 
   useEffect(() => {
-    if(localStorage.getItem(userAccount + "publicKey") == null)
-		{
-			const alice = EthCrypto.createIdentity();
-			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
-			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
-		}
-
+    if (localStorage.getItem(userAccount + "publicKey") == null) {
+      const alice = EthCrypto.createIdentity();
+      localStorage.setItem(userAccount + "publicKey", alice.publicKey);
+      localStorage.setItem(userAccount + "privateKey", alice.privateKey);
+    }
 
     contract.viewAllItems().then((stringOfItems) => {
       parseItem(stringOfItems);
-
     });
-
   }, []);
-
-
-
 
   // const getEncryptedString = (ID) => {
   //   return new Promise(function(resolve, reject) {
@@ -217,8 +214,14 @@ const Cart = (props) => {
         {items.map((item, key) => {
           console.log(item.Buyer);
           if (item.Buyer == userAccount.substring(2)) {
-
-            return <ItemCard item={item} setModal={setModal} encryptedString={encryptedString} userAccount={userAccount} />;
+            return (
+              <ItemCard
+                item={item}
+                setModal={setModal}
+                encryptedString={encryptedString}
+                userAccount={userAccount}
+              />
+            );
           }
         })}
       </Row>
@@ -236,7 +239,6 @@ const Cart = (props) => {
       >
         {/* {getEncryptedString(modal.itemId)} */}
         {encryptedString};
-
       </Modal>
     </>
   );

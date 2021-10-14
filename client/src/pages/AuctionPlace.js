@@ -151,7 +151,7 @@ const Marketplace = (props) => {
       const attributes = listItems[i].split(";");
       const item = {};
       for (var j = 0; j < attributes.length; j++) {
-        const keyValue = attributes[j].split(":");
+        const keyValue = attributes[j].split("^");
         const name = keyValue[0].trim();
         const value = keyValue[1].trim();
         item[name] = value;

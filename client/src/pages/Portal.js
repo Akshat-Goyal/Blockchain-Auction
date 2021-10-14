@@ -219,17 +219,23 @@ const Portal = (props) => {
 		const secretString = secret[item.ID];
 		console.log(secretString);
 		console.log(localStorage);
-		const buyerPublicKey = stringToHex(contract.getBuyerPublicKey(item.ID, { from: userAccount }));
-		const encrypted = await JSON.stringify(EthCrypto.encryptWithPublicKey(
+		const buyerPublicKey = await contract.getBuyerPublicKey(item.ID, { from: userAccount });
+		console.log(buyerPublicKey);
+		var encrypted = await EthCrypto.encryptWithPublicKey(
 			buyerPublicKey, // encrypt with alice's publicKey
 			secretString
-		));
-		const pub = localStorage.getItem(userAccount + "publicKey");
-		const pubString = hexToString(pub);
+		);
+		console.log(encrypted);
+		encrypted = JSON.stringify(encrypted);
+		console.log(encrypted);
+		// const pub = localStorage.getItem(userAccount + "publicKey");
+		// console.log(pub);
+		// const pubString = hexToString(pub);
+		// const pubString = pub;
 
 		await contract.deliverItem(item.ID, encrypted, { from: userAccount });
-		console.log(encrypted, pub, pubString);
-		console.log(typeof encrypted, typeof pub, typeof pubString);
+		// console.log(encrypted, pub, pubString);
+		console.log(typeof encrypted, typeof buyerPublicKey);
 		// localStorage.removeItem(item.ID.toString()+"secretString");
 		console.log(item.ID);
 	}
@@ -285,7 +291,7 @@ const Portal = (props) => {
 			const attributes = listItems[i].split(";");
 			const item = {};
 			for (var j = 0; j < attributes.length; j++) {
-				const keyValue = attributes[j].split(":");
+				const keyValue = attributes[j].split("^");
 				const name = keyValue[0].trim();
 				const value = keyValue[1].trim();
 				item[name] = value;

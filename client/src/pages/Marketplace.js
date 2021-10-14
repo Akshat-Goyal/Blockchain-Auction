@@ -49,7 +49,7 @@ const ColorButton3 = styled(Button)(({ theme }) => ({
 const ItemCard = ({ item, setModal, buyItem }) => {
 
   console.log(Object.keys(localStorage));
-  console.log(localStorage.getItem(item.ID) );
+  // console.log(localStorage.getItem(item.ID) );
   return (
     <Col>
     			<Card
@@ -110,7 +110,7 @@ const Marketplace = (props) => {
       const item = {};
       for(var j=0; j<attributes.length; j++)
       {
-        const keyValue = attributes[j].split(":");
+        const keyValue = attributes[j].split("^");
         const name = keyValue[0].trim();
         const value = keyValue[1].trim();
         item[name] = value;
@@ -150,7 +150,8 @@ const Marketplace = (props) => {
     console.log(localStorage);
     console.log(localStorage.getItem(userAccount + "publicKey"));
     const pub = localStorage.getItem(userAccount + "publicKey")
-    const pubString = hexToString(pub);
+    // const pubString = hexToString(pub);
+    const pubString = pub;
     contract.buyItem(ID, pubString, {from: userAccount, value: Price});
   }
 
