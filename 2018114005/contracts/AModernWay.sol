@@ -23,12 +23,6 @@ contract AModernWay {
         NO_BIDS
     }
 
-    // enum AuctionType {
-    //     FIRST_PRICE,
-    //     SECOND_PRICE,
-    //     AVERAGE_PRICE
-    // }
-
     struct Bid {
         bytes32 hashedBid;
         string password;
@@ -218,13 +212,6 @@ contract AModernWay {
         items[itemID].itemStatus = status.PAY_AND_VERIFY;
     }
 
-    //  function checkHash(string memory password)
-    //     public view
-    //     returns (uint256)
-    // {
-    //     return  keccak256(abi.encodePacked(msg.value));
-    // }
-
     /**
      * This function is used to convert uint256 to string
      * Taken from here: https://stackoverflow.com/questions/47129173/how-to-convert-uint-to-string-in-solidity
@@ -410,44 +397,6 @@ contract AModernWay {
         items[itemID].price = winnerBidValue;
     }
 
-    // /**
-    //  * This function is used to find the winner of the auction and refund the bidders' money.
-    //  * @param itemID is the id of the item
-    //  */
-    // function declareWinner(uint256 itemID)
-    //     private
-    //     onlyValidItemID(itemID)
-    // {
-    //     if(items[itemID].auction.auctionType == 0)
-    //         firstPriceAuctionWinner(itemID);
-    //     else if(items[itemID].auction.auctionType == 1)
-    //         secondPriceAuctionWinner(itemID);
-    //     else
-    //         averagePriceAuctionWinner(itemID);
-    // }
-
-    // /**
-    //  * This function is used to refund bidders' money.
-    //  * @param itemID is the id of the item
-    //  */
-    // function refundMoney(uint256 itemID)
-    //     private
-    //     onlyValidItemID(itemID)
-    // {
-    //     address payable[] memory bidders = items[itemID].auction.bidders;
-    //     for (uint256 i = 0; i < bidders.length; i++)
-    //     {
-    //         Bid memory bid = items[itemID].auction.addressToBid[bidders[i]];
-    //         if(bid.isVerified == true)
-    //         {
-    //             if(bidders[i] != items[itemID].buyerID)
-    //                 bidders[i].transfer(bid.bidValue);
-    //             else if(bid.bidValue != items[itemID].price)
-    //                 bidders[i].transfer(bid.bidValue - items[itemID].price);
-    //         }
-    //     }
-    // }
-
     /**
      * This function is used by a seller to stop the auction and declare the winner.
      * @param itemID is the id of the item
@@ -468,7 +417,6 @@ contract AModernWay {
         else if (items[itemID].auction.auctionType == 1)
             secondPriceAuctionWinner(itemID);
         else averagePriceAuctionWinner(itemID);
-        // declareWinner(itemID);
 
         address payable[] memory bidders = items[itemID].auction.bidders;
         for (uint256 i = 0; i < bidders.length; i++) {
@@ -480,7 +428,6 @@ contract AModernWay {
                     bidders[i].transfer(bid.bidValue - items[itemID].price);
             }
         }
-        // refundMoney(itemID);
 
         if (items[itemID].buyerID == items[itemID].sellerID)
             items[itemID].itemStatus = status.NO_BIDS;
@@ -525,21 +472,6 @@ contract AModernWay {
         items[itemID].sellerID.transfer(items[itemID].price);
     }
 
-    // /**
-    //  * This function is used to get the public Key of the seller.
-    //  * @param itemID is the unique ID of the item
-    //  * @return Public Key of the buyer who bought item with ID = itemID
-    //  */
-    // function getSellerPublicKey(uint256 itemID)
-    //     public
-    //     view
-    //     onlyValidItemID(itemID)
-    //     onlyDeliveredItem(itemID)
-    //     returns (string memory)
-    // {
-    //     return addressToPublicKey[items[itemID].sellerID];
-    // }
-
     /**
      * This function is used by the buyer to get the encrypted Secret string.
      * @param itemID is the unique ID of the item
@@ -572,93 +504,6 @@ contract AModernWay {
         if (uint8(b) < 10) return bytes1(uint8(b) + 0x30);
         else return bytes1(uint8(b) + 0x57);
     }
-
-    // /**
-    //  * This function is used by a buyer to view the items up for sale.
-    //  * @return a string containing list of all available Items for bidding
-    //  */
-    // function viewItemsForSale() public view returns (string memory) {
-    //     string memory itemList = "";
-
-    //     for (uint256 i = 0; i < items.length; i++) {
-    //         if (items[i].itemStatus == status.FOR_SALE) {
-    //             itemList = string(abi.encodePacked(itemList, "ID: "));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, uint2str(items[i].listingID))
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "; Name: "));
-    //             itemList = string(abi.encodePacked(itemList, items[i].name));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, "; Description: ")
-    //             );
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, items[i].description)
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "; SellerID: "));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, toAsciiString(items[i].sellerID))
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "; Status: "));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, items[i].itemStatus)
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "; Buyer: "));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, toAsciiString(items[i].buyerID))
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "; Price: "));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, uint2str(items[i].price))
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "\n"));
-    //         }
-    //     }
-
-    //     return itemList;
-    // }
-
-    // /**
-    //  * This function is used by a buyer to view the listing.
-    //  * @return a string containing list of all available Items for bidding
-    //  */
-    // function viewItemsForAuction() public view returns (string memory) {
-    //     string memory itemList = "";
-
-    //     for (uint256 i = 0; i < items.length; i++) {
-    //         if (
-    //             items[i].itemStatus == status.FOR_AUCTION ||
-    //             items[i].itemStatus == status.PAY_AND_VERIFY
-    //         ) {
-    //             itemList = string(abi.encodePacked(itemList, "ID: "));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, uint2str(items[i].listingID))
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "; Name: "));
-    //             itemList = string(abi.encodePacked(itemList, items[i].name));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, "; Description: ")
-    //             );
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, items[i].description)
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "; SellerID: "));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, toAsciiString(items[i].sellerID))
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "; Status: "));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, items[i].itemStatus)
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "; Buyer: "));
-    //             itemList = string(
-    //                 abi.encodePacked(itemList, toAsciiString(items[i].buyerID))
-    //             );
-    //             itemList = string(abi.encodePacked(itemList, "\n"));
-    //         }
-    //     }
-
-    //     return itemList;
-    // }
 
     /**
      * This function is used by a buyer to view the listing.
