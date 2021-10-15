@@ -65,13 +65,7 @@ const App = (props) => {
     },
   };
 
-  const [load, setLoad] = useState(false);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setLoad(true);
-    }, 2000);
-  }, []);
+  const [load, setLoad] = useState(true);
 
   return blockchain.web3 === null || !load ? (
     <div
@@ -83,21 +77,12 @@ const App = (props) => {
         alignItems: "center",
       }}
     >
-      <FadeIn>
-        <div>
-          <Lottie options={defaultOptions} height={320} width={320} />
-        </div>
-      </FadeIn>
-      <div style={{ textAlign: "center", position: "fixed", bottom: "20px" }}>
-        Loading Web3, accounts, and contract
-      </div>
+      Loading...
     </div>
   ) : (
-    <FadeIn>
-      <BlockchainContext.Provider value={blockchain}>
-        <Layout />
-      </BlockchainContext.Provider>
-    </FadeIn>
+    <BlockchainContext.Provider value={blockchain}>
+      <Layout />
+    </BlockchainContext.Provider>
   );
 };
 

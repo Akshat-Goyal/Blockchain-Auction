@@ -31,7 +31,6 @@ import FormHelperText from "@material-ui/core/FormHelperText";
 import FormControl from "@material-ui/core/FormControl";
 import FormLabel from "@material-ui/core/FormLabel";
 import InputLabel from "@material-ui/core/InputLabel";
-import { sampleImages } from "../components/SampleImages";
 import { ReactComponent as EthereumIcon } from "../assets/ethereum-icon.svg";
 import { BlockchainContext } from "../App";
 const EthCrypto = require("eth-crypto");
@@ -116,26 +115,29 @@ const ItemCard = ({ item, payBid, bid, setBid, placebid, userAccount }) => {
             localStorage.getItem(userAccount + item.ID) !== null ? (
             <ColorButton3 variant="contained" size="small">
               {" "}
-              Bid Placed: {localStorage.getItem(userAccount + item.ID)}
+              Bid Placed:{" "}
+              {parseInt(localStorage.getItem(userAccount + item.ID))}
             </ColorButton3>
           ) : item.Status == "\u0002" &&
             localStorage.getItem(userAccount + item.ID) !== null ? (
             <div onClick={() => payBid(item.ID)}>
               <ColorButton variant="contained" size="small">
                 {" "}
-                Pay Bid: {localStorage.getItem(userAccount + item.ID)}
+                Pay Bid: {parseInt(localStorage.getItem(userAccount + item.ID))}
               </ColorButton>
             </div>
           ) : (
             <div>
-              <ColorButton2 variant="contained" size="small">
+              <ColorButton3 variant="contained" size="small">
                 {" "}
-                Paid{" "}
-              </ColorButton2>
+                No More Actions Required from your side{" "}
+              </ColorButton3>
             </div>
           )}
         </CardActions>
       </Card>
+      <br />
+      <br />
     </Col>
   );
 };

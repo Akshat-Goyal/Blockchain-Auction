@@ -45,13 +45,6 @@ const Routes = (props) => {
             </Route>
           </Switch>
         </Content>
-        <Footer style={{ textAlign: "center" }}>
-          Made with{" "}
-          <span role="img" aria-label="blue-heart">
-            💙
-          </span>{" "}
-          by Team BlockDaggers
-        </Footer>
       </Layout>
     </BrowserRouter>
   );

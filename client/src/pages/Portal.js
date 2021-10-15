@@ -31,8 +31,6 @@ import FormHelperText from "@material-ui/core/FormHelperText";
 import FormControl from "@material-ui/core/FormControl";
 import FormLabel from "@material-ui/core/FormLabel";
 import InputLabel from "@material-ui/core/InputLabel";
-import Chip from "../components/Chip";
-import { sampleImages } from "../components/SampleImages";
 import { BlockchainContext } from "../App";
 const EthCrypto = require("eth-crypto");
 
@@ -133,7 +131,7 @@ const ItemCard = ({
             {item.Name}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {item.Description}
+            Description: {item.Description}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {item.Type}
@@ -142,7 +140,7 @@ const ItemCard = ({
             <Typography></Typography>
           ) : (
             <Typography variant="body2" color="text.secondary">
-              {item.Price}
+              Price: {item.Price}
             </Typography>
           )}
         </CardContent>
@@ -470,7 +468,7 @@ const Portal = (props) => {
                 <div>
                   <br />
                   <FormLabel component="legend">
-                    <b>Enter Price</b>
+                    <b>Enter Price (in Wei)</b>
                     <br />
                   </FormLabel>
                   <TextField
