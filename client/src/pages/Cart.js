@@ -46,13 +46,12 @@ const ColorButton3 = styled(Button)(({ theme }) => ({
   },
 }));
 
-
 /**
    * This is the item card.
    * All items bought by the user are displayed to the user using ItemCard.
    * It contains details like Name, Description, Price etc.
-   * The user can also see teh secret String. 
-   
+   * The user can also see teh secret String.
+
 */
 const ItemCard = ({
   item,
@@ -76,8 +75,9 @@ const ItemCard = ({
       setDecryptedString(decrypted);
     }
 
-    if (item.Status == '\u0004')
+    if (item.Status == "\u0004") {
       getDecrpyted();
+    }
   }, []);
 
   return (
@@ -110,30 +110,29 @@ const ItemCard = ({
       </Card>
       <br />
       <br />
-
     </Col>
   );
 };
 
-
 /**
-   * React Functional component representing the Auction Place. 
-   * It contains various states and functions used throughout the compnonent.
-*/
+ * React Functional component representing the Auction Place.
+ * It contains various states and functions used throughout the compnonent.
+ */
 const Cart = (props) => {
   /**
-  * items State is an array containing all the items fetched from the contract.
-  * encryptedString is the object  storing the secret string for different items.
-  * BlockchainContext contains contract details and useraccount details.
- */
+   * items State is an array containing all the items fetched from the contract.
+   * encryptedString is the object  storing the secret string for different items.
+   * BlockchainContext contains contract details and useraccount details.
+   */
   const [modal, setModal] = useState({ visible: false, itemId: "" });
   const [encryptedString, setEncryptedString] = useState({});
-  const { web3, accounts, contract, userAccount } = useContext(BlockchainContext);
+  const { web3, accounts, contract, userAccount } =
+    useContext(BlockchainContext);
   const [items, setItems] = useState([]);
 
- /**
-    * parseItem parses the stringOfItems fetched from the contract to be displayed to the user.
-    * @param stringOfItems is the string of list of items added to the contract 
+  /**
+   * parseItem parses the stringOfItems fetched from the contract to be displayed to the user.
+   * @param stringOfItems is the string of list of items added to the contract
    */
   const parseItem = (stringOfItems) => {
     const listItems = stringOfItems.split("\n");
@@ -156,10 +155,10 @@ const Cart = (props) => {
     }
   };
 
- /**
-    * This useeffect runs when the component loads. 
-    * userIdentity is created and Item details are fetched from the backend
-  */
+  /**
+   * This useeffect runs when the component loads.
+   * userIdentity is created and Item details are fetched from the backend
+   */
   useEffect(() => {
     if (localStorage.getItem(userAccount + "publicKey") == null) {
       const alice = EthCrypto.createIdentity();
@@ -172,9 +171,9 @@ const Cart = (props) => {
     });
   }, []);
 
-/**
+  /**
    * Return value of functional component.
-  */
+   */
   return items.length == 0 ? (
     "No items found"
   ) : (
