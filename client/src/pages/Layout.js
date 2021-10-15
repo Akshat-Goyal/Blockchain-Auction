@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import { Layout } from "antd";
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from "@material-ui/core/styles";
 import Navbar from "../components/Navbar";
 import Marketplace from "./Marketplace";
 import Auctionplace from "./AuctionPlace";

@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext } from "react";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 import FadeIn from "react-fade-in";
 import Lottie from "react-lottie";
-import trufflecontract from 'truffle-contract';
+import trufflecontract from "truffle-contract";
 
 import getWeb3 from "./getWeb3";
 // import AuctionContract from "./contracts/Auction.json";

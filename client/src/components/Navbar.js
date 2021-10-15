@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Layout, Menu, Row, Col } from "antd";
 import { useLocation } from "react-router-dom";
-import { makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from "@material-ui/core/styles";
 import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import CssBaseline from "@material-ui/core/CssBaseline";
@@ -32,26 +32,26 @@ const { Header } = Layout;
 const parseBalance = (num, decimal) =>
   Math.round(10 ** decimal * (num / 10 ** 18)) / 10 ** decimal;
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   "@global": {
     ul: {
       margin: 0,
       padding: 0,
-      listStyle: "none"
-    }
+      listStyle: "none",
+    },
   },
   appBar: {
-    borderBottom: `1px solid ${theme.palette.divider}`
+    borderBottom: `1px solid ${theme.palette.divider}`,
   },
   toolbar: {
-    flexWrap: "wrap"
+    flexWrap: "wrap",
   },
   toolbarTitle: {
     margin: theme.spacing(1, 1.5),
-    flexGrow: 1
+    flexGrow: 1,
   },
   link: {
-    margin: theme.spacing(1, 1.5)
+    margin: theme.spacing(1, 1.5),
   },
   menuButton: {
     marginRight: theme.spacing(2),
@@ -74,14 +74,18 @@ const Navbar = (props) => {
   }, []);
 
   return (
-      <AppBar
-          position="static"
-          color="default"
-          elevation={0}
-          className={classes.appBar}
-      >
-       <Toolbar className={classes.toolbar}>
-        <Typography color="textPrimary" variant="h6" className={classes.toolbarTitle}>
+    <AppBar
+      position="static"
+      color="default"
+      elevation={0}
+      className={classes.appBar}
+    >
+      <Toolbar className={classes.toolbar}>
+        <Typography
+          color="textPrimary"
+          variant="h6"
+          className={classes.toolbarTitle}
+        >
           Auction Bay
         </Typography>
 
@@ -119,13 +123,10 @@ const Navbar = (props) => {
           My Cart
         </Link>
 
-
-
         <Typography color="textPrimary" className={classes.link}>
           <EthereumIcon style={{ height: "1rem", marginRight: "5px" }} />
-           {parseBalance(balance, 4)}
+          {parseBalance(balance, 4)}
         </Typography>
-
       </Toolbar>
     </AppBar>
   );
