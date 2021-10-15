@@ -46,6 +46,14 @@ const ColorButton3 = styled(Button)(({ theme }) => ({
   },
 }));
 
+
+/**
+   * This is the item card.
+   * All items bought by the user are displayed to the user using ItemCard.
+   * It contains details like Name, Description, Price etc.
+   * The user can also see teh secret String. 
+   
+*/
 const ItemCard = ({
   item,
   setModal,
@@ -53,11 +61,6 @@ const ItemCard = ({
   encryptedString,
   userAccount,
 }) => {
-  console.log("1: ", Object.keys(localStorage));
-  console.log("2: ", item.SecretString);
-  // console.log("3: ", JSON.parse(item.SecretString));
-  // console.log("4: ", typeof item.SecretString, typeof JSON.parse(item.SecretString));
-  // console.log(localStorage.getItem(item.ID));
   const [decryptedString, setDecryptedString] = useState();
 
   useEffect(() => {
@@ -73,7 +76,7 @@ const ItemCard = ({
       setDecryptedString(decrypted);
     }
 
-    if(item.Status == '\u0004')
+    if (item.Status == '\u0004')
       getDecrpyted();
   }, []);
 
@@ -107,53 +110,31 @@ const ItemCard = ({
       </Card>
       <br />
       <br />
-      {/* <Card
-        style={{ width: 300, margin: "20px 0" }}
-        cover={<img style={{ width: "100%" }} src={sampleImages[0]} />}
-        actions={[
-          <div>
-          </div>
-        ]}
-      >
-        <Meta
-          title={"Name : " + item.Name}
-        />
-        <Meta
-          title={"Description : " + item.Description}
-        />
 
-        <Meta
-          title={"Price : " + item.Price}
-        />
-        {
-          (item.Status == '\u0004')?
-          (
-            <Meta
-            title={"Secret : " + item.SecretString}
-            />
-
-          ):
-          (
-            <Meta
-            title={"Waiting for delivery"}
-            />
-          )
-        }
-
-        <Tag
-          style={{
-            marginTop: "20px",
-          }}
-          color="green"
-        >
-        </Tag>
-      </Card> */}
     </Col>
   );
 };
 
+
+/**
+   * React Functional component representing the Auction Place. 
+   * It contains various states and functions used throughout the compnonent.
+*/
 const Cart = (props) => {
+  /**
+  * items State is an array containing all the items fetched from the contract.
+  * encryptedString is the object  storing the secret string for different items.
+  * BlockchainContext contains contract details and useraccount details.
+ */
+  const [modal, setModal] = useState({ visible: false, itemId: "" });
+  const [encryptedString, setEncryptedString] = useState({});
+  const { web3, accounts, contract, userAccount } = useContext(BlockchainContext);
   const [items, setItems] = useState([]);
+
+ /**
+    * parseItem parses the stringOfItems fetched from the contract to be displayed to the user.
+    * @param stringOfItems is the string of list of items added to the contract 
+   */
   const parseItem = (stringOfItems) => {
     const listItems = stringOfItems.split("\n");
     const newList = [];
@@ -175,12 +156,10 @@ const Cart = (props) => {
     }
   };
 
-  const [modal, setModal] = useState({ visible: false, itemId: "" });
-  const [encryptedString, setEncryptedString] = useState({});
-  const { web3, accounts, contract, userAccount } =
-    useContext(BlockchainContext);
-  console.log(web3, accounts, contract, userAccount);
-
+ /**
+    * This useeffect runs when the component loads. 
+    * userIdentity is created and Item details are fetched from the backend
+  */
   useEffect(() => {
     if (localStorage.getItem(userAccount + "publicKey") == null) {
       const alice = EthCrypto.createIdentity();
@@ -193,20 +172,9 @@ const Cart = (props) => {
     });
   }, []);
 
-  // const getEncryptedString = (ID) => {
-  //   return new Promise(function(resolve, reject) {
-
-  //   contract.getItem(ID, { from: userAccount }).then((secretString) => {
-  //     const oldencryptedString = encryptedString;
-  //     oldencryptedString[ID] = secretString;
-  //     setEncryptedString(oldencryptedString);
-  //     resolve('start of new Promise');
-  //   });
-
-  // });
-  // }
-
-  // console.log(x);
+/**
+   * Return value of functional component.
+  */
   return items.length == 0 ? (
     "No items found"
   ) : (
@@ -238,7 +206,6 @@ const Cart = (props) => {
           setModal({ visible: false, itemId: "" });
         }}
       >
-        {/* {getEncryptedString(modal.itemId)} */}
         {encryptedString};
       </Modal>
     </>

@@ -46,128 +46,144 @@ const ColorButton3 = styled(Button)(({ theme }) => ({
   },
 }));
 
+/**
+   * This is the item card.
+   * All items available to be bought on fixed price are displayed to the user using cards.
+   * It contains details like Name, Description, Auction Type
+   * The user can also access the functions like placing bid, pay bid etc. 
+   
+*/
+
+
 const ItemCard = ({ item, setModal, buyItem }) => {
 
-  console.log(Object.keys(localStorage));
-  // console.log(localStorage.getItem(item.ID) );
   return (
     <Col>
-    			<Card
-				sx={{ maxWidth: 345 }}>
-				<CardContent>
-					<Typography gutterBottom variant="h4" component="div">
-					{item.Name}
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-					Description: {item.Description}
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-					Price: {item.Price}
-					</Typography>
-				</CardContent>
-				<CardActions>
+      <Card
+        sx={{ maxWidth: 345 }}>
+        <CardContent>
+          <Typography gutterBottom variant="h4" component="div">
+            {item.Name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Description: {item.Description}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Price: {item.Price}
+          </Typography>
+        </CardContent>
+        <CardActions>
 
-						{item.Status == '\u0001' ? (
-              <div onClick={() => buyItem(item.ID, item.Price)}>
-                <ColorButton3 variant="outlined">Buy</ColorButton3>
+          {item.Status == '\u0001' ? (
+            <div onClick={() => buyItem(item.ID, item.Price)}>
+              <ColorButton3 variant="outlined">Buy</ColorButton3>
 
-              </div>
-						) : (
-						 <div> </div>
-						) }
-				</CardActions>
-			</Card>
-			<br />
-			<br />
+            </div>
+          ) : (
+            <div> </div>
+          )}
+        </CardActions>
+      </Card>
+      <br />
+      <br />
     </Col>
   );
 };
 
-function stringToHex(str)
-{
-    const buf = Buffer.from(str, 'utf8');
-    return buf.toString('hex');
+function stringToHex(str) {
+  const buf = Buffer.from(str, 'utf8');
+  return buf.toString('hex');
 }
 
-function hexToString(str)
-{
-    const buf = new Buffer(str, 'hex');
-    return buf.toString('utf8');
+function hexToString(str) {
+  const buf = new Buffer(str, 'hex');
+  return buf.toString('utf8');
 }
 
-
+/**
+   * React Functional component representing the Auction Place. 
+   * It contains functions for buying items. 
+   * It also contains various states and functions used throughout the compnonent.
+ 
+ */
 const Marketplace = (props) => {
+  /**
+   * items State is an array containing all the items fetched from the contract.
+   * bid State is an object  storing the bids placed on different items.
+   * BlockchainContext contains contract details and useraccount details.
+  */
+  const [items, setItems] = useState([]);
+  const [modal, setModal] = useState({ visible: false, itemId: "" });
+  const [bid, setBid] = useState();
+  const { web3, accounts, contract, userAccount } = useContext(BlockchainContext);
 
-  const [items, setItems] = useState([
-  ]);
-  const parseItem = (stringOfItems) =>
-  {
+  /**
+    * parseItem parses the stringOfItems fetched from the contract to be displayed to the user.
+    * @param stringOfItems is the string of list of items added to the contract 
+  */
+  const parseItem = (stringOfItems) => {
     const listItems = stringOfItems.split("\n");
     const newList = [];
-    for(var i=0; i<listItems.length-1; i++)
-    {
+    for (var i = 0; i < listItems.length - 1; i++) {
       const attributes = listItems[i].split(";");
       const item = {};
-      for(var j=0; j<attributes.length; j++)
-      {
+      for (var j = 0; j < attributes.length; j++) {
         const keyValue = attributes[j].split("^");
         const name = keyValue[0].trim();
         const value = keyValue[1].trim();
         item[name] = value;
       }
-      if(item.Status == '\u0001')
+      if (item.Status == '\u0001')
         newList.push(item);
     }
     console.log(newList);
-    if(newList != items)
-    {
+    if (newList != items) {
       setItems(newList);
     }
   }
 
-  const [modal, setModal] = useState({ visible: false, itemId: "" });
-  const [bid, setBid] = useState();
-  const {web3, accounts, contract, userAccount} = useContext(BlockchainContext);
-  console.log(web3, accounts, contract, userAccount);
-
+  /**
+    * This useeffect runs when the component loads. 
+    * userIdentity is created and Item details are fetched from the backend
+  */
   useEffect(() => {
-    if(localStorage.getItem(userAccount + "publicKey") == null)
-		{
-			const alice = EthCrypto.createIdentity();
-			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
-			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
-		}
-    contract.viewAllItems().then((stringOfItems) =>
-    {
-     parseItem(stringOfItems);
+    if (localStorage.getItem(userAccount + "publicKey") == null) {
+      const alice = EthCrypto.createIdentity();
+      localStorage.setItem(userAccount + "publicKey", alice.publicKey);
+      localStorage.setItem(userAccount + "privateKey", alice.privateKey);
+    }
+    contract.viewAllItems().then((stringOfItems) => {
+      parseItem(stringOfItems);
     });
-   }, []);
+  }, []);
 
 
-
-  const buyItem = (ID, Price) =>
-  {
-    console.log(localStorage);
-    console.log(localStorage.getItem(userAccount + "publicKey"));
+  /**
+   * Function to buy an item. The buyer also sends its public key to the contract to recieve 
+   * the secret string from the seller later.
+   * @param ID Item which is bought
+   * @param Price of the item bought
+  */
+  const buyItem = (ID, Price) => {
     const pub = localStorage.getItem(userAccount + "publicKey")
-    // const pubString = hexToString(pub);
     const pubString = pub;
-    contract.buyItem(ID, pubString, {from: userAccount, value: Price});
+    contract.buyItem(ID, pubString, { from: userAccount, value: Price });
   }
 
 
-  // console.log(x);
+   /**
+   * Return value of functional component.
+  */
   return items.length == 0 ? (
     "No items found"
   ) : (
-      <Row align="center" gutter={[26, 26]}>
-        {items.map((item, key) => {
-          if (item.SellerID != userAccount.substring(2))
-          {
-            return <ItemCard item={item} setModal={setModal} buyItem={buyItem} />;
-          }
-        })}
-      </Row>
+    <Row align="center" gutter={[26, 26]}>
+      {items.map((item, key) => {
+        if (item.SellerID != userAccount.substring(2)) {
+          return <ItemCard item={item} setModal={setModal} buyItem={buyItem} />;
+        }
+      })}
+    </Row>
 
   );
 };

@@ -62,52 +62,59 @@ const ColorButton3 = styled(Button)(({ theme }) => ({
   },
 }));
 
-const ItemCard = ({ item, payBid, bid, setBid, placebid, userAccount}) => {
 
-  const handleBidChange = (val) =>
-  {
+/**
+   * This is the item card.
+   * All items available for auction are displayed to the user using cards.
+   * It contains details like Name, Description, Auction Type
+   * The user can also access the functions like placing bid, pay bid etc. 
+   
+*/
+const ItemCard = ({ item, payBid, bid, setBid, placebid, userAccount }) => {
+
+  const handleBidChange = (val) => {
     var oldBids = bid;
     oldBids[item.ID] = val;
     setBid(oldBids);
   }
   return (
     <Col>
-    	<Card
-				sx={{ maxWidth: 345 }}>
-				<CardContent>
-					<Typography gutterBottom variant="h4" component="div">
-					{item.Name}
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-					Description: {item.Description}
-					</Typography>
-					<Typography variant="body2" color="text.secondary">
-					Auction Type: {item.AuctionName}
-					</Typography>
-				</CardContent>
-				<CardActions>
+      <Card
+        sx={{ maxWidth: 345 }}>
+        <CardContent>
+          <Typography gutterBottom variant="h4" component="div">
+            {item.Name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Description: {item.Description}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Auction Type: {item.AuctionName}
+          </Typography>
+        </CardContent>
+        <CardActions>
 
-						{item.Status == '\u0000' && localStorage.getItem(userAccount + item.ID) === null ?  (
-              <div>
-                <FormLabel component="legend">
-								<b>Enter your Bid Amount</b>
-								<br />
-								</FormLabel>
-								<TextField
-									variant="standard"
-									required
-                  type="number"
-									onChange={(value) => handleBidChange(value.target.value)}
-									value={bid[item.ID]}
-								/>
-								<br/>
-								<br/>
-								<div onClick={() => placebid(item.ID)}>
-									<ColorButton2 variant="contained" size="small">Place Bid</ColorButton2>
-								</div>
-
+          {item.Status == '\u0000' && localStorage.getItem(userAccount + item.ID) === null ? (
+            <div>
+              <FormLabel component="legend">
+                <b>Enter your Bid Amount</b>
+                <br />
+              </FormLabel>
+              <TextField
+                variant="standard"
+                required
+                type="number"
+                onChange={(value) => handleBidChange(value.target.value)}
+                value={bid[item.ID]}
+              />
+              <br />
+              <br />
+              <div onClick={() => placebid(item.ID)}>
+                <ColorButton2 variant="contained" size="small">Place Bid</ColorButton2>
               </div>
-						) : (
+
+            </div>
+          ) : (
             item.Status == '\u0000' && localStorage.getItem(userAccount + item.ID) !== null ? (
               <ColorButton3 variant="contained" size="small"> Bid Placed: {localStorage.getItem(userAccount + item.ID)}</ColorButton3>
             ) : (
@@ -122,29 +129,47 @@ const ItemCard = ({ item, payBid, bid, setBid, placebid, userAccount}) => {
               )
             )
           )}
-				</CardActions>
-			</Card>
+        </CardActions>
+      </Card>
 
     </Col>
   );
 };
 
-function stringToHex(str)
-{
-    const buf = Buffer.from(str, 'utf8');
-    return buf.toString('hex');
+function stringToHex(str) {
+  const buf = Buffer.from(str, 'utf8');
+  return buf.toString('hex');
 }
 
-function hexToString(str)
-{
-    const buf = new Buffer(str, 'hex');
-    return buf.toString('utf8');
+function hexToString(str) {
+  const buf = new Buffer(str, 'hex');
+  return buf.toString('utf8');
 }
 
-const Marketplace = (props) => {
 
- const [items, setItems] = useState([
-  ]);
+
+/**
+   * React Functional component representing the Auction Place. 
+   * It contains functions for placing bid, pay bid etc. 
+   * It also contains various states used throughout the compnonent.
+ 
+ */
+const AuctionPlace = (props) => {
+  /**
+   * items State is an array containing all the items fetched from the contract.
+   * bid State is an object  storing the bids placed on different items.
+   * BlockchainContext contains contract details and useraccount details.
+   */
+  const [items, setItems] = useState([]);
+  const [bid, setBid] = useState({});
+  const { web3, accounts, contract, userAccount } = useContext(BlockchainContext);
+
+
+
+  /**
+    * parseItem parses the stringOfItems fetched from the contract to be displayed to the user.
+    * @param stringOfItems is the string of list of items added to the contract 
+  */
   const parseItem = (stringOfItems) => {
     const listItems = stringOfItems.split("\n");
     const newList = [];
@@ -157,44 +182,59 @@ const Marketplace = (props) => {
         const value = keyValue[1].trim();
         item[name] = value;
       }
-      if(item.AuctionType == 0) {
+      if (item.AuctionType == 0) {
         item["AuctionName"] = "First Price Auction";
       }
-      else if(item.AuctionType == 1) {
+      else if (item.AuctionType == 1) {
         item["AuctionName"] = "Second Price Auction";
       }
-      else if(item.AuctionType == 2){
+      else if (item.AuctionType == 2) {
         item["AuctionName"] = "Average Price Auction";
       }
-      if(item.Status == '\u0000' || item.Status == '\u0002')
+      if (item.Status == '\u0000' || item.Status == '\u0002')
         newList.push(item);
     }
-    console.log(newList);
     if (newList != items) {
       setItems(newList);
     }
   }
-
-  const [bid, setBid] = useState({});
-  const { web3, accounts, contract, userAccount } = useContext(BlockchainContext);
-  console.log(web3, accounts, contract, userAccount);
-
-  useEffect(() => {
-    if(localStorage.getItem(userAccount + "password") == null) {
-      localStorage.setItem(userAccount + "password", "password");
+ /**
+    *Function to generate a random password
+  */
+  function generatePassword(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() *
+        charactersLength));
     }
-    if(localStorage.getItem(userAccount + "publicKey") == null)
-		{
-			const alice = EthCrypto.createIdentity();
-			localStorage.setItem(userAccount + "publicKey", alice.publicKey);
-			localStorage.setItem(userAccount + "privateKey", alice.privateKey);
-		}
-    // console.log(typeof (userAccount));
+    return result;
+  }
+  /**
+    * This useeffect runs when the component loads. 
+    * userIdentity is created and Item details are fetched from the backend
+  */
+  useEffect(() => {
+    if (localStorage.getItem(userAccount + "password") == null) {
+      var password = generatePassword(10);
+      localStorage.setItem(userAccount + "password", password);
+    }
+    if (localStorage.getItem(userAccount + "publicKey") == null) {
+      const alice = EthCrypto.createIdentity();
+      localStorage.setItem(userAccount + "publicKey", alice.publicKey);
+      localStorage.setItem(userAccount + "privateKey", alice.privateKey);
+    }
     contract.viewAllItems().then((stringOfItems) => {
       parseItem(stringOfItems);
     });
   }, []);
 
+
+  /**
+    * Function to hash the bid using sha3.
+    * @param placebid bid placed by the user
+   */
   const hashBid = (placedBid) => {
     const password = localStorage.getItem(userAccount + "password");
     const hash = web3.utils.sha3(
@@ -203,8 +243,12 @@ const Marketplace = (props) => {
     return hash;
   }
 
+  /**
+   * Function to place the bid and call the bidAtAuction of contract.
+   * @param ID Item Id for which the bid is placed.
+  */
   const placebid = (ID) => {
-    if(!bid[ID] || parseInt(bid[ID]) < 0) {
+    if (!bid[ID] || parseInt(bid[ID]) < 0) {
       alert("Please enter a non negative integer!");
       return;
     }
@@ -214,6 +258,12 @@ const Marketplace = (props) => {
     })
   }
 
+  /**
+   * Function to pay the bid and call the payAndVerifyBid of contract.
+   * The buyer also sends its public key to the contrac to recieve 
+   * the secret string from the seller later.
+   * @param ID Item Id for which the bid is paid.
+  */
   const payBid = (ID) => {
 
     const bidValue = localStorage.getItem(userAccount + ID);
@@ -224,21 +274,22 @@ const Marketplace = (props) => {
   }
 
 
-  // console.log(x);
+  /**
+   * Return value of functional component.
+  */
   return items.length == 0 ? (
     "No items found"
   ) : (
     <>
       <Row align="center" gutter={[26, 26]}>
         {items.map((item, key) => {
-           if (item.SellerID != userAccount.substring(2))
-           {
-            return <ItemCard item={item} payBid={payBid} bid={bid} setBid={setBid} placebid={placebid} userAccount={userAccount}/>;
-           }
-          })}
+          if (item.SellerID != userAccount.substring(2)) {
+            return <ItemCard item={item} payBid={payBid} bid={bid} setBid={setBid} placebid={placebid} userAccount={userAccount} />;
+          }
+        })}
       </Row>
     </>
   );
 };
 
-export default Marketplace;
+export default AuctionPlace;

@@ -104,7 +104,13 @@ const useStyles = makeStyles(theme => ({
 	}
 }));
 
-
+/**
+   * This is the item card.
+   * All items placed for sale/auction are displayed to the user using cards.
+   * It contains details like Name, Description, Auction Type
+   * The user can also access the functions like stop bidding, stop auction, deliver etc. 
+   
+*/
 
 const ItemCard = ({ item, setModal, stopBidding, stopAuction, deliverItem, secret, setSecret }) => {
 	const handleSecretChange = (val) => {
@@ -206,50 +212,24 @@ function hexToString(str) {
 	return buf.toString('utf8');
 }
 
+
+/**
+ * React Functional component representing the Auction Place. 
+ * It contains functions like stop bidding, stop auction, deliver etc. 
+ * It also contains various states used throughout the compnonent.
+ 
+ */
+
 const Portal = (props) => {
 	const classes = useStyles();
-	const stopBidding = async (item) => {
-		await contract.stopBidding(item.ID, { from: userAccount });
-	}
-	const stopAuction = async (item) => {
-		await contract.stopAuction(item.ID, { from: userAccount });
-	}
-
-	const deliverItem = async (item) => {
-		const secretString = secret[item.ID];
-		if(!secretString) {
-			alert("Please enter a string!");
-			return;
-		}
-		// console.log(secretString);
-		// console.log(localStorage);
-		const buyerPublicKey = await contract.getBuyerPublicKey(item.ID, { from: userAccount });
-		// console.log(buyerPublicKey);
-		var encrypted = await EthCrypto.encryptWithPublicKey(
-			buyerPublicKey, // encrypt with alice's publicKey
-			secretString
-		);
-		// console.log(encrypted);
-		encrypted = JSON.stringify(encrypted);
-		// console.log(encrypted);
-		// const pub = localStorage.getItem(userAccount + "publicKey");
-		// console.log(pub);
-		// const pubString = hexToString(pub);
-		// const pubString = pub;
-
-		await contract.deliverItem(item.ID, encrypted, { from: userAccount });
-		// console.log(encrypted, pub, pubString);
-		// console.log(typeof encrypted, typeof buyerPublicKey);
-		// localStorage.removeItem(item.ID.toString()+"secretString");
-		// console.log(item.ID);
-	}
-
-	function arrayEquals(a, b) {
-		return Array.isArray(a) &&
-			Array.isArray(b) &&
-			a.length === b.length &&
-			a.every((val, index) => val === b[index]);
-	}
+	
+	/**
+	 * items State is an array containing all the items fetched from the contract.
+	 * inputs State contain all the form details entered by the user.
+	 * bid State is an object  storing the bids placed on different items.
+	 * BlockchainContext contains contract details and useraccount details.
+	 */
+	
 	const [items, setItems] = useState([]);
 	const [inputs, setInputs] = useState({
 		ItemName: "",
@@ -258,7 +238,57 @@ const Portal = (props) => {
 	});
 	const [modal, setModal] = useState({ visible: false, itemId: "" });
 	const [secret, setSecret] = useState({});
-
+	const { web3, accounts, contract, userAccount } = useContext(BlockchainContext);
+	const [user, setUser] = useState(userAccount);
+	
+	/**
+	 * Seller uses this function to stop the bidding process and 
+	 * allow bidders to pay their bid
+	*/
+	const stopBidding = async (item) => {
+		await contract.stopBidding(item.ID, { from: userAccount });
+	}
+	/**
+	 * Seller uses this function to stop the auction and declare results.
+	*/
+	const stopAuction = async (item) => {
+		await contract.stopAuction(item.ID, { from: userAccount });
+	}
+	/**
+	 * Seller uses this function to deliver the secret string 
+	 * to buyer encrypted using buyer's public key.
+	*/
+	const deliverItem = async (item) => {
+		const secretString = secret[item.ID];
+		if(!secretString) {
+			alert("Please enter a string!");
+			return;
+		}
+		const buyerPublicKey = await contract.getBuyerPublicKey(item.ID, { from: userAccount });
+		var encrypted = await EthCrypto.encryptWithPublicKey(
+			buyerPublicKey, // encrypt with alice's publicKey
+			secretString
+		);
+		encrypted = JSON.stringify(encrypted);
+		await contract.deliverItem(item.ID, encrypted, { from: userAccount });
+	
+	}
+	/**
+	 * Utility function to check if 2 lists contain same elements.
+	 * @param a 1st string
+	 * @param b 2nd string
+	 * @return true if both arrays are equal 
+	*/
+	function arrayEquals(a, b) {
+		return Array.isArray(a) &&
+			Array.isArray(b) &&
+			a.length === b.length &&
+			a.every((val, index) => val === b[index]);
+	}
+	/**
+	* Function to handle change in the form inputs and update the 
+	* state accordingly. 
+	*/
 	const handleChange = (event) => {
 		const target = event.target;
 		const name = event.target.name;
@@ -270,9 +300,10 @@ const Portal = (props) => {
 		setInputs(values => ({ ...values, [name]: value }))
 	}
 
-	const { web3, accounts, contract, userAccount } = useContext(BlockchainContext);
-	const [user, setUser] = useState(userAccount);
-
+	/**
+	* Function to handle form submission. The item is sent to the contract to be 
+	* added in the marketplace or the auction place. 
+	*/
 	const handleSubmit = (event) => {
 		event.preventDefault();
 		console.log(inputs.ItemName);
@@ -292,9 +323,7 @@ const Portal = (props) => {
 			return;
 		}
 		if (inputs.AuctionType == '3') {
-			console.log(inputs);
 			contract.addItemForSale(inputs.ItemName, inputs.ItemDescription, inputs.ItemRate, { from: userAccount }).then((id) => {
-				console.log(id);
 				localStorage.setItem(id + "secretString", inputs.SecretString);
 			});
 		}
@@ -304,7 +333,10 @@ const Portal = (props) => {
 			});
 		}
 	}
-
+	/**
+	* parseItem parses the stringOfItems fetched from the contract to be displayed to the user.
+	* @param stringOfItems is the string of list of items added to the contract 
+	*/
 	const parseItem = (stringOfItems) => {
 		const listItems = stringOfItems.split("\n");
 		const newList = [];
@@ -336,7 +368,10 @@ const Portal = (props) => {
 			setItems(newList);
 		}
 	}
-
+	/**
+	 * This useeffect runs when the component loads. 
+	 * userIdentity is created and Item details are fetched from the backend
+	*/
 	useEffect(() => {
 		if (localStorage.getItem(userAccount + "publicKey") == null) {
 			const alice = EthCrypto.createIdentity();
@@ -350,6 +385,9 @@ const Portal = (props) => {
 		});
 	}, [inputs]);
 
+	/**
+	 * Return value of functional component.
+	*/
 	return (
 
 		<>
@@ -387,23 +425,6 @@ const Portal = (props) => {
 								value={inputs.ItemDescription || ""}
 							/>
 						</Grid>
-						{/*
-						<Grid item xs={12}>
-							<br />
-							<FormLabel component="legend">
-								<b>Secret String</b>
-								<br />
-							</FormLabel>
-							<TextField
-								variant="outlined"
-								required
-								fullWidth
-								name="SecretString"
-								onChange={handleChange}
-								value={inputs.SecretString || ""}
-							/>
-						</Grid> */}
-
 						<Grid item xs={12}>
 							<br />
 							<FormLabel component="legend">
@@ -413,7 +434,6 @@ const Portal = (props) => {
 
 							</FormLabel>
 
-							{/* <InputLabel id="demo-simple-select-label">Select type</InputLabel> */}
 							<Select
 								labelId="demo-simple-select-label"
 								id="demo-simple-select"
