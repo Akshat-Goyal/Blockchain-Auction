@@ -128,6 +128,7 @@ After the item is delivered the buyer can use their private key to decrypt and g
 
 - All relevant code has been properly explained with [Doxygen Comments](https://www.doxygen.nl/manual/docblocks.html).
 - A few sample test cases have been provided too. They are present as a markdown file `tests.md` in the folder.
+- Please refresh after you change account in MetaMask, or add a listing, or place a bid, or deliver an item, etc. for the changes to be reflected on the page.
 
 
 ### Group 1
